@@ -1,0 +1,563 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXContainerItemProxy section */
+		3761A28E2DEF6F7B00C1CBC3 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 3761A2752DEF6F7900C1CBC3 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 3761A27C2DEF6F7900C1CBC3;
+			remoteInfo = ModaApp;
+		};
+		3761A2982DEF6F7B00C1CBC3 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 3761A2752DEF6F7900C1CBC3 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 3761A27C2DEF6F7900C1CBC3;
+			remoteInfo = ModaApp;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		3761A27D2DEF6F7900C1CBC3 /* ModaApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ModaApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		3761A28D2DEF6F7B00C1CBC3 /* ModaAppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ModaAppTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		3761A2972DEF6F7B00C1CBC3 /* ModaAppUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ModaAppUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		3761A27F2DEF6F7900C1CBC3 /* ModaApp */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = ModaApp;
+			sourceTree = "<group>";
+		};
+		3761A2902DEF6F7B00C1CBC3 /* ModaAppTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = ModaAppTests;
+			sourceTree = "<group>";
+		};
+		3761A29A2DEF6F7B00C1CBC3 /* ModaAppUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = ModaAppUITests;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		3761A27A2DEF6F7900C1CBC3 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		3761A28A2DEF6F7B00C1CBC3 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		3761A2942DEF6F7B00C1CBC3 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		3761A2742DEF6F7900C1CBC3 = {
+			isa = PBXGroup;
+			children = (
+				3761A27F2DEF6F7900C1CBC3 /* ModaApp */,
+				3761A2902DEF6F7B00C1CBC3 /* ModaAppTests */,
+				3761A29A2DEF6F7B00C1CBC3 /* ModaAppUITests */,
+				3761A27E2DEF6F7900C1CBC3 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		3761A27E2DEF6F7900C1CBC3 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				3761A27D2DEF6F7900C1CBC3 /* ModaApp.app */,
+				3761A28D2DEF6F7B00C1CBC3 /* ModaAppTests.xctest */,
+				3761A2972DEF6F7B00C1CBC3 /* ModaAppUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		3761A27C2DEF6F7900C1CBC3 /* ModaApp */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 3761A2A12DEF6F7B00C1CBC3 /* Build configuration list for PBXNativeTarget "ModaApp" */;
+			buildPhases = (
+				3761A2792DEF6F7900C1CBC3 /* Sources */,
+				3761A27A2DEF6F7900C1CBC3 /* Frameworks */,
+				3761A27B2DEF6F7900C1CBC3 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				3761A27F2DEF6F7900C1CBC3 /* ModaApp */,
+			);
+			name = ModaApp;
+			packageProductDependencies = (
+			);
+			productName = ModaApp;
+			productReference = 3761A27D2DEF6F7900C1CBC3 /* ModaApp.app */;
+			productType = "com.apple.product-type.application";
+		};
+		3761A28C2DEF6F7B00C1CBC3 /* ModaAppTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 3761A2A42DEF6F7B00C1CBC3 /* Build configuration list for PBXNativeTarget "ModaAppTests" */;
+			buildPhases = (
+				3761A2892DEF6F7B00C1CBC3 /* Sources */,
+				3761A28A2DEF6F7B00C1CBC3 /* Frameworks */,
+				3761A28B2DEF6F7B00C1CBC3 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				3761A28F2DEF6F7B00C1CBC3 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				3761A2902DEF6F7B00C1CBC3 /* ModaAppTests */,
+			);
+			name = ModaAppTests;
+			packageProductDependencies = (
+			);
+			productName = ModaAppTests;
+			productReference = 3761A28D2DEF6F7B00C1CBC3 /* ModaAppTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		3761A2962DEF6F7B00C1CBC3 /* ModaAppUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 3761A2A72DEF6F7B00C1CBC3 /* Build configuration list for PBXNativeTarget "ModaAppUITests" */;
+			buildPhases = (
+				3761A2932DEF6F7B00C1CBC3 /* Sources */,
+				3761A2942DEF6F7B00C1CBC3 /* Frameworks */,
+				3761A2952DEF6F7B00C1CBC3 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				3761A2992DEF6F7B00C1CBC3 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				3761A29A2DEF6F7B00C1CBC3 /* ModaAppUITests */,
+			);
+			name = ModaAppUITests;
+			packageProductDependencies = (
+			);
+			productName = ModaAppUITests;
+			productReference = 3761A2972DEF6F7B00C1CBC3 /* ModaAppUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		3761A2752DEF6F7900C1CBC3 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1600;
+				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+					3761A27C2DEF6F7900C1CBC3 = {
+						CreatedOnToolsVersion = 16.0;
+					};
+					3761A28C2DEF6F7B00C1CBC3 = {
+						CreatedOnToolsVersion = 16.0;
+						TestTargetID = 3761A27C2DEF6F7900C1CBC3;
+					};
+					3761A2962DEF6F7B00C1CBC3 = {
+						CreatedOnToolsVersion = 16.0;
+						TestTargetID = 3761A27C2DEF6F7900C1CBC3;
+					};
+				};
+			};
+			buildConfigurationList = 3761A2782DEF6F7900C1CBC3 /* Build configuration list for PBXProject "ModaApp" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 3761A2742DEF6F7900C1CBC3;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 3761A27E2DEF6F7900C1CBC3 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				3761A27C2DEF6F7900C1CBC3 /* ModaApp */,
+				3761A28C2DEF6F7B00C1CBC3 /* ModaAppTests */,
+				3761A2962DEF6F7B00C1CBC3 /* ModaAppUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		3761A27B2DEF6F7900C1CBC3 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		3761A28B2DEF6F7B00C1CBC3 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		3761A2952DEF6F7B00C1CBC3 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		3761A2792DEF6F7900C1CBC3 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		3761A2892DEF6F7B00C1CBC3 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		3761A2932DEF6F7B00C1CBC3 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		3761A28F2DEF6F7B00C1CBC3 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 3761A27C2DEF6F7900C1CBC3 /* ModaApp */;
+			targetProxy = 3761A28E2DEF6F7B00C1CBC3 /* PBXContainerItemProxy */;
+		};
+		3761A2992DEF6F7B00C1CBC3 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 3761A27C2DEF6F7900C1CBC3 /* ModaApp */;
+			targetProxy = 3761A2982DEF6F7B00C1CBC3 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		3761A29F2DEF6F7B00C1CBC3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		3761A2A02DEF6F7B00C1CBC3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		3761A2A22DEF6F7B00C1CBC3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"ModaApp/Preview Content\"";
+				DEVELOPMENT_TEAM = LHMQX5XTGM;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.vahiguner.ModaApp.ModaApp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		3761A2A32DEF6F7B00C1CBC3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"ModaApp/Preview Content\"";
+				DEVELOPMENT_TEAM = LHMQX5XTGM;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.vahiguner.ModaApp.ModaApp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		3761A2A52DEF6F7B00C1CBC3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = LHMQX5XTGM;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.vahiguner.ModaApp.ModaAppTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ModaApp.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/ModaApp";
+			};
+			name = Debug;
+		};
+		3761A2A62DEF6F7B00C1CBC3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = LHMQX5XTGM;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.vahiguner.ModaApp.ModaAppTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ModaApp.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/ModaApp";
+			};
+			name = Release;
+		};
+		3761A2A82DEF6F7B00C1CBC3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = LHMQX5XTGM;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.vahiguner.ModaApp.ModaAppUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = ModaApp;
+			};
+			name = Debug;
+		};
+		3761A2A92DEF6F7B00C1CBC3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = LHMQX5XTGM;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.vahiguner.ModaApp.ModaAppUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = ModaApp;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		3761A2782DEF6F7900C1CBC3 /* Build configuration list for PBXProject "ModaApp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3761A29F2DEF6F7B00C1CBC3 /* Debug */,
+				3761A2A02DEF6F7B00C1CBC3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		3761A2A12DEF6F7B00C1CBC3 /* Build configuration list for PBXNativeTarget "ModaApp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3761A2A22DEF6F7B00C1CBC3 /* Debug */,
+				3761A2A32DEF6F7B00C1CBC3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		3761A2A42DEF6F7B00C1CBC3 /* Build configuration list for PBXNativeTarget "ModaAppTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3761A2A52DEF6F7B00C1CBC3 /* Debug */,
+				3761A2A62DEF6F7B00C1CBC3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		3761A2A72DEF6F7B00C1CBC3 /* Build configuration list for PBXNativeTarget "ModaAppUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3761A2A82DEF6F7B00C1CBC3 /* Debug */,
+				3761A2A92DEF6F7B00C1CBC3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 3761A2752DEF6F7900C1CBC3 /* Project object */;
+}
