@@ -24,25 +24,37 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		3761A27D2DEF6F7900C1CBC3 /* ModaApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ModaApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		3761A28D2DEF6F7B00C1CBC3 /* ModaAppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ModaAppTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		3761A2972DEF6F7B00C1CBC3 /* ModaAppUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ModaAppUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		3761A2B42DEF73A700C1CBC3 /* ModaApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ModaApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		3761A2B52DEF73A700C1CBC3 /* ModaAppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ModaAppTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		3761A2B62DEF73A700C1CBC3 /* ModaAppUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ModaAppUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		3761A2AB2DEF70C400C1CBC3 /* Exceptions for "ModaApp" folder in "ModaApp" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				.gitignore,
+				Info.plist,
+			);
+			target = 3761A27C2DEF6F7900C1CBC3 /* ModaApp */;
+		};
+		3761A2B32DEF72D900C1CBC3 /* Exceptions for "ModaApp" folder in "ModaAppTests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				.gitignore,
+			);
+			target = 3761A28C2DEF6F7B00C1CBC3 /* ModaAppTests */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		3761A27F2DEF6F7900C1CBC3 /* ModaApp */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				3761A2AB2DEF70C400C1CBC3 /* Exceptions for "ModaApp" folder in "ModaApp" target */,
+				3761A2B32DEF72D900C1CBC3 /* Exceptions for "ModaApp" folder in "ModaAppTests" target */,
+			);
 			path = ModaApp;
-			sourceTree = "<group>";
-		};
-		3761A2902DEF6F7B00C1CBC3 /* ModaAppTests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = ModaAppTests;
-			sourceTree = "<group>";
-		};
-		3761A29A2DEF6F7B00C1CBC3 /* ModaAppUITests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = ModaAppUITests;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -76,20 +88,10 @@
 			isa = PBXGroup;
 			children = (
 				3761A27F2DEF6F7900C1CBC3 /* ModaApp */,
-				3761A2902DEF6F7B00C1CBC3 /* ModaAppTests */,
-				3761A29A2DEF6F7B00C1CBC3 /* ModaAppUITests */,
-				3761A27E2DEF6F7900C1CBC3 /* Products */,
+				3761A2B42DEF73A700C1CBC3 /* ModaApp.app */,
+				3761A2B52DEF73A700C1CBC3 /* ModaAppTests.xctest */,
+				3761A2B62DEF73A700C1CBC3 /* ModaAppUITests.xctest */,
 			);
-			sourceTree = "<group>";
-		};
-		3761A27E2DEF6F7900C1CBC3 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				3761A27D2DEF6F7900C1CBC3 /* ModaApp.app */,
-				3761A28D2DEF6F7B00C1CBC3 /* ModaAppTests.xctest */,
-				3761A2972DEF6F7B00C1CBC3 /* ModaAppUITests.xctest */,
-			);
-			name = Products;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -114,7 +116,7 @@
 			packageProductDependencies = (
 			);
 			productName = ModaApp;
-			productReference = 3761A27D2DEF6F7900C1CBC3 /* ModaApp.app */;
+			productReference = 3761A2B42DEF73A700C1CBC3 /* ModaApp.app */;
 			productType = "com.apple.product-type.application";
 		};
 		3761A28C2DEF6F7B00C1CBC3 /* ModaAppTests */ = {
@@ -130,14 +132,11 @@
 			dependencies = (
 				3761A28F2DEF6F7B00C1CBC3 /* PBXTargetDependency */,
 			);
-			fileSystemSynchronizedGroups = (
-				3761A2902DEF6F7B00C1CBC3 /* ModaAppTests */,
-			);
 			name = ModaAppTests;
 			packageProductDependencies = (
 			);
 			productName = ModaAppTests;
-			productReference = 3761A28D2DEF6F7B00C1CBC3 /* ModaAppTests.xctest */;
+			productReference = 3761A2B52DEF73A700C1CBC3 /* ModaAppTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 		3761A2962DEF6F7B00C1CBC3 /* ModaAppUITests */ = {
@@ -153,14 +152,11 @@
 			dependencies = (
 				3761A2992DEF6F7B00C1CBC3 /* PBXTargetDependency */,
 			);
-			fileSystemSynchronizedGroups = (
-				3761A29A2DEF6F7B00C1CBC3 /* ModaAppUITests */,
-			);
 			name = ModaAppUITests;
 			packageProductDependencies = (
 			);
 			productName = ModaAppUITests;
-			productReference = 3761A2972DEF6F7B00C1CBC3 /* ModaAppUITests.xctest */;
+			productReference = 3761A2B62DEF73A700C1CBC3 /* ModaAppUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 /* End PBXNativeTarget section */
@@ -196,7 +192,7 @@
 			mainGroup = 3761A2742DEF6F7900C1CBC3;
 			minimizedProjectReferenceProxies = 1;
 			preferredProjectObjectVersion = 77;
-			productRefGroup = 3761A27E2DEF6F7900C1CBC3 /* Products */;
+			productRefGroup = 3761A2742DEF6F7900C1CBC3;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -399,6 +395,7 @@
 				DEVELOPMENT_TEAM = LHMQX5XTGM;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = ModaApp/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -428,6 +425,7 @@
 				DEVELOPMENT_TEAM = LHMQX5XTGM;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = ModaApp/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
