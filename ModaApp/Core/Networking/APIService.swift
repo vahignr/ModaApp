@@ -2,7 +2,7 @@
 //  APIService.swift
 //  ModaApp
 //
-//  Updated to use ConfigurationManager
+//  Updated to use ConfigurationManager and include Fashion Analysis
 //
 
 import Foundation
@@ -31,7 +31,84 @@ enum APIServiceError: Error, LocalizedError {
 
 struct APIService {
     
-    // MARK: Vision ------------------------------------------------------------
+    // MARK: - Fashion Analysis (JSON Response) --------------------------------
+    
+    /// Analyzes outfit for a specific occasion and returns structured data
+    static func analyzeFashion(for image: UIImage, occasion: String) async throws -> FashionAnalysis {
+        let base64 = try await resizeAndEncode(image,
+                                               maxEdge: ConfigurationManager.maxImageSize,
+                                               quality: ConfigurationManager.imageQuality)
+        
+        // Messages for fashion analysis
+        let messages: [[String: Any]] = [
+            [
+                "role": "system",
+                "content": ConfigurationManager.fashionAnalysisPrompt(for: occasion)
+            ],
+            [
+                "role": "user",
+                "content": [
+                    [
+                        "type": "image_url",
+                        "image_url": [
+                            "url": "data:image/jpeg;base64,\(base64)",
+                            "detail": "high"  // Use high detail for better analysis
+                        ]
+                    ]
+                ]
+            ]
+        ]
+        
+        let body: [String: Any] = [
+            "model": ConfigurationManager.visionModel,
+            "messages": messages,
+            "max_tokens": 1500,  // More tokens for detailed JSON
+            "temperature": 0.3   // Lower temperature for consistent JSON
+        ]
+        
+        let data = try await postJSON(
+            to: "https://api.openai.com/v1/chat/completions",
+            payload: body
+        )
+        
+        // Parse JSON response
+        let jsonString = try parseChatResponse(data)
+        
+        print("🔍 API Response JSON:")
+        print(jsonString.prefix(500))
+        
+        // Convert to FashionAnalysis object
+        guard let jsonData = jsonString.data(using: .utf8) else {
+            print("❌ Failed to convert string to data")
+            throw APIServiceError.unexpectedResponse
+        }
+        
+        do {
+            let analysis = try JSONDecoder().decode(FashionAnalysis.self, from: jsonData)
+            print("✅ Successfully decoded FashionAnalysis")
+            return analysis
+        } catch {
+            print("❌ JSON Parsing Error: \(error)")
+            if let decodingError = error as? DecodingError {
+                switch decodingError {
+                case .dataCorrupted(let context):
+                    print("   Data corrupted: \(context)")
+                case .keyNotFound(let key, let context):
+                    print("   Key not found: \(key.stringValue) - \(context.debugDescription)")
+                case .typeMismatch(let type, let context):
+                    print("   Type mismatch: \(type) - \(context.debugDescription)")
+                case .valueNotFound(let type, let context):
+                    print("   Value not found: \(type) - \(context.debugDescription)")
+                @unknown default:
+                    print("   Unknown decoding error")
+                }
+            }
+            print("📝 Raw JSON: \(jsonString)")
+            throw APIServiceError.unexpectedResponse
+        }
+    }
+    
+    // MARK: - Vision (Original) -----------------------------------------------
     
     /// Sends the outfit photo to GPT-4o Vision and returns the stylist comment.
     static func generateCaption(for image: UIImage) async throws -> String {

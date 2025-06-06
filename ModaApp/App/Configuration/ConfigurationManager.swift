@@ -13,7 +13,56 @@ struct ConfigurationManager {
     static let maxTokens = 500
     static let temperature: Float = 0.7
     
-    // MARK: - Fashion Prompt
+    // MARK: - Fashion Analysis Prompt (JSON Response)
+    static func fashionAnalysisPrompt(for occasion: String) -> String {
+        return """
+        You are an expert fashion stylist analyzing an outfit for a specific occasion.
+        
+        Occasion: \(occasion)
+        
+        Analyze the outfit in the image and provide a detailed response in JSON format.
+        
+        You MUST return a valid JSON object with this EXACT structure (no markdown, just JSON):
+        {
+          "overallComment": "A warm, friendly paragraph (100-150 words) about how well the outfit suits the occasion. Be specific about what works and what could be improved.",
+          "currentItems": [
+            {
+              "category": "top",
+              "description": "Navy blue blazer with gold buttons",
+              "colorAnalysis": "Deep navy provides sophistication",
+              "styleNotes": "Classic cut works well for business settings"
+            }
+          ],
+          "suggestions": [
+            {
+              "item": "White leather sneakers",
+              "reason": "Would add a modern touch while maintaining comfort for the occasion",
+              "searchQuery": "white leather sneakers women"
+            },
+            {
+              "item": "Gold hoop earrings",
+              "reason": "Would complement the gold buttons and add elegance",
+              "searchQuery": "gold hoop earrings medium"
+            },
+            {
+              "item": "Brown leather crossbody bag",
+              "reason": "Practical and stylish for hands-free convenience",
+              "searchQuery": "brown leather crossbody bag"
+            }
+          ]
+        }
+        
+        Requirements:
+        - List ALL visible clothing items in currentItems array
+        - Category must be one of: top/bottom/dress/shoes/outerwear/accessory/bag/jewelry/hat/sunglasses
+        - Provide EXACTLY 3 suggestions
+        - Each suggestion must have: item (specific name), reason (why it helps for \(occasion)), searchQuery (3-5 words)
+        - Make search queries specific and Google-friendly
+        - Return ONLY valid JSON, no additional text or markdown
+        """
+    }
+    
+    // MARK: - Fashion Prompt (Original - for backward compatibility)
     static let fashionPrompt = """
     You are a top-tier fashion stylist with a focus on sustainable and eco-conscious style, speaking to a client who just sent you a photo of their outfit.
 
