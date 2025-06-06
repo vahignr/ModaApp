@@ -2,8 +2,7 @@
 //  APIService.swift
 //  ModaApp
 //
-//  Updated 6 Jun 2025
-//  • Vision call now uses a dedicated “fashion-stylist” prompt.
+//  Updated to use ConfigurationManager
 //
 
 import Foundation
@@ -32,37 +31,19 @@ enum APIServiceError: Error, LocalizedError {
 
 struct APIService {
     
-    // MARK: Static prompt -----------------------------------------------------
-    
-    /// One-shot system prompt for fashion feedback.
-    private static let fashionPrompt = """
-    You are a top-tier fashion stylist speaking to a client who just sent you a photo of their outfit.
-
-    • First, open with one warm compliment about the overall look (max 1 short sentence).
-    • Then analyse the outfit in 3–4 sentences:
-        – Mention the key garments, colours, fit, and style vibe you observe.
-        – Highlight what works well from a fashion perspective (proportions, colour harmony, texture, trend alignment, etc.).
-    • Offer 2 concise, constructive suggestions your client could try next time (e.g. accessory swap, layering idea, colour pop).
-    • End with an encouraging sign-off that reinforces their personal style journey.
-
-    Tone: upbeat, friendly, and confidence-boosting—never judgmental.
-    Do **NOT** guess personal attributes (age, gender, ethnicity, body shape) or comment on the person’s body; focus only on the clothing and styling choices visible in the image.
-    Target length: 120–180 words. No bullet lists or headings—write as a smooth conversational paragraph.
-    """
-
     // MARK: Vision ------------------------------------------------------------
     
     /// Sends the outfit photo to GPT-4o Vision and returns the stylist comment.
     static func generateCaption(for image: UIImage) async throws -> String {
         let base64 = try await resizeAndEncode(image,
-                                               maxEdge: 256,
-                                               quality: 0.6)
+                                               maxEdge: ConfigurationManager.maxImageSize,
+                                               quality: ConfigurationManager.imageQuality)
         
         // Messages in official multi-modal array-of-parts format
         let messages: [[String: Any]] = [
             [
                 "role": "system",
-                "content": fashionPrompt
+                "content": ConfigurationManager.fashionPrompt
             ],
             [
                 "role": "user",
@@ -79,10 +60,10 @@ struct APIService {
         ]
         
         let body: [String: Any] = [
-            "model": "gpt-4o-mini",
+            "model": ConfigurationManager.visionModel,
             "messages": messages,
-            "max_tokens": 500,
-            "temperature": 0.7
+            "max_tokens": ConfigurationManager.maxTokens,
+            "temperature": ConfigurationManager.temperature
         ]
         
         let data = try await postJSON(
@@ -95,15 +76,15 @@ struct APIService {
     // MARK: TTS ---------------------------------------------------------------
     
     static func textToSpeech(_ text: String,
-                             voice: String = "nova",
-                             instructions: String = "Speak in a warm, conversational style.") async throws -> URL {
+                             voice: String? = nil,
+                             instructions: String? = nil) async throws -> URL {
         let body: [String: Any] = [
-            "model": "gpt-4o-mini-tts",
-            "voice": voice,
+            "model": ConfigurationManager.ttsModel,
+            "voice": voice ?? ConfigurationManager.defaultVoice,
             "input": text,
-            "instructions": instructions,
-            "speed": 1.0,
-            "output_format": "mp3"
+            "instructions": instructions ?? ConfigurationManager.defaultVoiceInstructions,
+            "speed": ConfigurationManager.ttsSpeed,
+            "output_format": ConfigurationManager.outputFormat
         ]
 
         let data = try await postJSON(
@@ -112,7 +93,7 @@ struct APIService {
         )
 
         let url = FileManager.default.temporaryDirectory
-            .appendingPathComponent("tts-\(UUID().uuidString).mp3")
+            .appendingPathComponent("tts-\(UUID().uuidString).\(ConfigurationManager.outputFormat)")
         try data.write(to: url)
         return url
     }
