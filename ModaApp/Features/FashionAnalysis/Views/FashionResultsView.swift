@@ -31,25 +31,33 @@ struct FashionResultsView: View {
                 print("📱 Tab changed to: \(newValue == 0 ? "Current Outfit" : "Style Suggestions")")
             }
             
-            // Tab Content
-            TabView(selection: $selectedTab) {
-                // Current Items Tab
-                CurrentItemsView(
-                    items: analysis.currentItems,
-                    expandedItems: $expandedItems
-                )
-                .tag(0)
-                
-                // Suggestions Tab
-                SuggestionsView(
-                    suggestions: analysis.suggestions,
-                    isSearchingImages: isSearchingImages,
-                    showFullImage: $showFullImage,
-                    selectedImageURL: $selectedImageURL
-                )
-                .tag(1)
+            // Tab Content - FIXED: Using conditional views instead of TabView
+            Group {
+                if selectedTab == 0 {
+                    // Current Items Tab
+                    CurrentItemsView(
+                        items: analysis.currentItems,
+                        expandedItems: $expandedItems
+                    )
+                    .transition(.asymmetric(
+                        insertion: .move(edge: .leading).combined(with: .opacity),
+                        removal: .move(edge: .trailing).combined(with: .opacity)
+                    ))
+                } else {
+                    // Suggestions Tab
+                    SuggestionsView(
+                        suggestions: analysis.suggestions,
+                        isSearchingImages: isSearchingImages,
+                        showFullImage: $showFullImage,
+                        selectedImageURL: $selectedImageURL
+                    )
+                    .transition(.asymmetric(
+                        insertion: .move(edge: .trailing).combined(with: .opacity),
+                        removal: .move(edge: .leading).combined(with: .opacity)
+                    ))
+                }
             }
-            .tabViewStyle(.page(indexDisplayMode: .never))
+            .animation(.easeInOut(duration: 0.3), value: selectedTab)
             
             // New Analysis Button
             Button(action: onNewAnalysis) {
@@ -65,6 +73,14 @@ struct FashionResultsView: View {
         .sheet(isPresented: $showFullImage) {
             if let imageURL = selectedImageURL {
                 ImageDetailView(imageURL: imageURL)
+            }
+        }
+        .onAppear {
+            print("📋 FashionResultsView appeared")
+            print("   - Current items: \(analysis.currentItems.count)")
+            print("   - Suggestions: \(analysis.suggestions.count)")
+            for (index, suggestion) in analysis.suggestions.enumerated() {
+                print("     \(index + 1). \(suggestion.item) - Has \(suggestion.searchResults?.count ?? 0) images")
             }
         }
     }
@@ -163,24 +179,34 @@ struct CurrentItemsView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: ModernTheme.Spacing.md) {
-                ForEach(items) { item in
-                    CurrentItemCard(
-                        item: item,
-                        isExpanded: expandedItems.contains(item.id),
-                        onTap: {
-                            withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                                if expandedItems.contains(item.id) {
-                                    expandedItems.remove(item.id)
-                                } else {
-                                    expandedItems.insert(item.id)
+                if items.isEmpty {
+                    Text("No outfit items detected")
+                        .font(ModernTheme.Typography.body)
+                        .foregroundColor(ModernTheme.textSecondary)
+                        .padding()
+                } else {
+                    ForEach(items) { item in
+                        CurrentItemCard(
+                            item: item,
+                            isExpanded: expandedItems.contains(item.id),
+                            onTap: {
+                                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                                    if expandedItems.contains(item.id) {
+                                        expandedItems.remove(item.id)
+                                    } else {
+                                        expandedItems.insert(item.id)
+                                    }
                                 }
                             }
-                        }
-                    )
+                        )
+                    }
                 }
             }
             .padding(.horizontal)
             .padding(.bottom, ModernTheme.Spacing.xxl)
+        }
+        .onAppear {
+            print("📋 CurrentItemsView appeared with \(items.count) items")
         }
     }
 }
@@ -295,7 +321,11 @@ struct SuggestionsView: View {
         .onAppear {
             print("📋 SuggestionsView appeared with \(suggestions.count) suggestions")
             for (index, suggestion) in suggestions.enumerated() {
-                print("  \(index + 1). \(suggestion.item) - Has \(suggestion.searchResults?.count ?? 0) images")
+                let imageCount = suggestion.searchResults?.count ?? 0
+                print("  \(index + 1). \(suggestion.item) - Has \(imageCount) images")
+                if imageCount > 0 {
+                    print("       First image: \(suggestion.searchResults?.first?.imageUrl.prefix(50) ?? "N/A")...")
+                }
             }
         }
     }
@@ -330,33 +360,54 @@ struct SuggestionCard: View {
                     .foregroundColor(ModernTheme.primary)
             }
             
+            // Search Results Debug Info
+            if let results = suggestion.searchResults {
+                Text("Found \(results.count) images")
+                    .font(ModernTheme.Typography.caption2)
+                    .foregroundColor(ModernTheme.textTertiary)
+                    .padding(.horizontal, ModernTheme.Spacing.xs)
+            }
+            
             // Search Results
             if let results = suggestion.searchResults, !results.isEmpty {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: ModernTheme.Spacing.sm) {
-                        ForEach(results) { result in
+                        ForEach(results.prefix(5)) { result in // Limit to 5 images for performance
                             SearchResultImage(
                                 result: result,
                                 isLoaded: loadedImages.contains(result.imageUrl),
-                                onTap: { onImageTap(result.imageUrl) },
+                                onTap: {
+                                    print("🖼️ Image tapped: \(result.imageUrl)")
+                                    onImageTap(result.imageUrl)
+                                },
                                 onLoad: { loadedImages.insert(result.imageUrl) }
                             )
                         }
                     }
+                    .padding(.horizontal, ModernTheme.Spacing.xs)
                 }
             } else if isSearchingImages {
                 // Loading state
-                HStack(spacing: ModernTheme.Spacing.sm) {
-                    ForEach(0..<3) { _ in
-                        RoundedRectangle(cornerRadius: ModernTheme.CornerRadius.medium)
-                            .fill(ModernTheme.lightSage)
-                            .frame(width: 120, height: 120)
-                            .overlay(
-                                ProgressView()
-                                    .tint(ModernTheme.primary)
-                            )
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: ModernTheme.Spacing.sm) {
+                        ForEach(0..<3, id: \.self) { _ in
+                            RoundedRectangle(cornerRadius: ModernTheme.CornerRadius.medium)
+                                .fill(ModernTheme.lightSage)
+                                .frame(width: 120, height: 120)
+                                .overlay(
+                                    ProgressView()
+                                        .tint(ModernTheme.primary)
+                                )
+                        }
                     }
+                    .padding(.horizontal, ModernTheme.Spacing.xs)
                 }
+            } else {
+                // No results state
+                Text("No images found for this suggestion")
+                    .font(ModernTheme.Typography.caption)
+                    .foregroundColor(ModernTheme.textTertiary)
+                    .padding(.horizontal, ModernTheme.Spacing.xs)
             }
             
             // Search Query Tag
@@ -385,6 +436,10 @@ struct SuggestionCard: View {
                     y: ModernTheme.Shadow.small.y
                 )
         )
+        .onAppear {
+            print("🃏 SuggestionCard appeared for: \(suggestion.item)")
+            print("   Search results count: \(suggestion.searchResults?.count ?? 0)")
+        }
     }
 }
 
@@ -412,15 +467,27 @@ struct SearchResultImage: View {
                     .scaledToFill()
                     .frame(width: 120, height: 120)
                     .clipShape(RoundedRectangle(cornerRadius: ModernTheme.CornerRadius.medium))
-                    .onAppear(perform: onLoad)
-            case .failure(_):
+                    .onAppear {
+                        print("✅ Image loaded successfully: \(result.imageUrl.prefix(50))...")
+                        onLoad()
+                    }
+            case .failure(let error):
                 RoundedRectangle(cornerRadius: ModernTheme.CornerRadius.medium)
                     .fill(ModernTheme.lightSage)
                     .frame(width: 120, height: 120)
                     .overlay(
-                        Image(systemName: "photo")
-                            .foregroundColor(ModernTheme.textTertiary)
+                        VStack {
+                            Image(systemName: "photo")
+                                .foregroundColor(ModernTheme.textTertiary)
+                            Text("Failed")
+                                .font(.caption2)
+                                .foregroundColor(ModernTheme.textTertiary)
+                        }
                     )
+                    .onAppear {
+                        print("❌ Image failed to load: \(error.localizedDescription)")
+                        print("   URL: \(result.imageUrl)")
+                    }
             @unknown default:
                 EmptyView()
             }
@@ -428,15 +495,17 @@ struct SearchResultImage: View {
         .overlay(
             VStack {
                 Spacer()
-                Text(result.title)
-                    .font(ModernTheme.Typography.caption2)
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 4)
-                    .padding(.vertical, 2)
-                    .background(Color.black.opacity(0.7))
-                    .cornerRadius(4)
-                    .lineLimit(2)
-                    .padding(4)
+                if !result.title.isEmpty {
+                    Text(result.title)
+                        .font(ModernTheme.Typography.caption2)
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 4)
+                        .padding(.vertical, 2)
+                        .background(Color.black.opacity(0.7))
+                        .cornerRadius(4)
+                        .lineLimit(2)
+                        .padding(4)
+                }
             }
         )
         .onTapGesture(perform: onTap)
