@@ -11,8 +11,10 @@ struct ContentView: View {
     
     @StateObject private var vm = ImageCaptureViewModel()
     @StateObject private var creditsManager = CreditsManager.shared
+    @EnvironmentObject var localizationManager: LocalizationManager
     @State private var showCreditsAnimation = false
     @State private var currentStep: Step = .selectImage
+    @Environment(\.dismiss) private var dismiss
     
     enum Step {
         case selectImage
@@ -71,9 +73,35 @@ struct ContentView: View {
                         .padding(.bottom, ModernTheme.Spacing.xxl)
                     }
                 }
+                
+                // Language Button (Top Right)
+                VStack {
+                    HStack {
+                        Spacer()
+                        LanguageButton()
+                            .padding(.horizontal)
+                            .padding(.top, 60) // Below navigation bar
+                    }
+                    Spacer()
+                }
             }
-            .navigationTitle("EcoStyle AI")
+            .navigationTitle(localized(.modaAnalyzer))
             .navigationBarTitleDisplayMode(.large)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button {
+                        dismiss()
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "chevron.left")
+                                .font(.system(size: 16, weight: .medium))
+                            Text(localized(.home))
+                                .font(.system(size: 16, weight: .medium))
+                        }
+                        .foregroundColor(ModernTheme.primary)
+                    }
+                }
+            }
         }
         .onChange(of: vm.showResults) { _, newValue in
             if newValue {
@@ -89,17 +117,17 @@ struct ContentView: View {
                 }
             }
         }
-        .alert("No Credits", isPresented: $vm.showPurchaseView) {
-            Button("Buy Credits") {
+        .alert(localized(.noCredits), isPresented: $vm.showPurchaseView) {
+            Button(localized(.buyCredits)) {
                 // TODO: Navigate to purchase view
                 print("Navigate to purchase view")
             }
-            Button("Later", role: .cancel) { }
+            Button(localized(.later), role: .cancel) { }
         } message: {
-            Text("You need credits to analyze outfits. Each analysis costs 1 credit.")
+            Text(localized(.needCreditsMessage))
         }
-        .alert("Error", isPresented: .constant(vm.error != nil)) {
-            Button("OK") { vm.error = nil }
+        .alert(localized(.error), isPresented: .constant(vm.error != nil)) {
+            Button(localized(.ok)) { vm.error = nil }
         } message: {
             Text(vm.error ?? "")
         }
@@ -109,13 +137,16 @@ struct ContentView: View {
 // MARK: - Step Indicator
 struct StepIndicator: View {
     let currentStep: ContentView.Step
+    @EnvironmentObject var localizationManager: LocalizationManager
     
-    private let steps: [(ContentView.Step, String, String)] = [
-        (.selectImage, "camera.fill", "Photo"),
-        (.selectOccasion, "calendar", "Occasion"),
-        (.analyzing, "sparkles", "Style"),
-        (.results, "checkmark.circle", "Results")
-    ]
+    private var steps: [(ContentView.Step, String, LocalizedStringKey)] {
+        [
+            (.selectImage, "camera.fill", .photo),
+            (.selectOccasion, "calendar", .occasion),
+            (.analyzing, "sparkles", .style),
+            (.results, "checkmark.circle", .results)
+        ]
+    }
     
     var body: some View {
         HStack(spacing: 0) {
@@ -133,7 +164,7 @@ struct StepIndicator: View {
                     }
                     
                     // Step Label
-                    Text(step.2)
+                    Text(localized(step.2))
                         .font(ModernTheme.Typography.caption)
                         .foregroundColor(isStepCompleted(step.0) ? ModernTheme.primary : ModernTheme.textTertiary)
                         .padding(.leading, 4)
@@ -174,11 +205,11 @@ struct ImageSelectionView: View {
         VStack(spacing: ModernTheme.Spacing.lg) {
             // Title
             VStack(spacing: ModernTheme.Spacing.xs) {
-                Text("Upload Your Outfit")
+                Text(localized(.uploadYourOutfit))
                     .font(ModernTheme.Typography.headline)
                     .foregroundColor(ModernTheme.textPrimary)
                 
-                Text("Take a photo or select from gallery")
+                Text(localized(.takePhotoOrSelect))
                     .font(ModernTheme.Typography.callout)
                     .foregroundColor(ModernTheme.textSecondary)
             }
@@ -194,7 +225,7 @@ struct ImageSelectionView: View {
                     }
                 } label: {
                     PrimaryButton(
-                        title: "Continue to Occasion",
+                        title: localized(.continueToOccasion),
                         systemImage: "arrow.right",
                         style: .primary
                     )
@@ -227,7 +258,7 @@ struct OccasionSelectionView: View {
                     }
                 } label: {
                     PrimaryButton(
-                        title: "Back",
+                        title: localized(.back),
                         systemImage: "chevron.left",
                         style: .secondary
                     )
@@ -237,7 +268,7 @@ struct OccasionSelectionView: View {
                     vm.analyzeOutfit()
                 } label: {
                     PrimaryButton(
-                        title: "Analyze Style",
+                        title: localized(.analyzeStyle),
                         systemImage: "sparkles",
                         enabled: vm.canAnalyze && vm.hasCredits
                     )
@@ -273,7 +304,7 @@ struct AnalyzingView: View {
             }
             
             // Loading Text
-            Text("Analyzing your style" + String(repeating: ".", count: dots))
+            Text(localized(.analyzingYourStyle) + String(repeating: ".", count: dots))
                 .font(ModernTheme.Typography.headline)
                 .foregroundColor(ModernTheme.textPrimary)
                 .onAppear {
@@ -282,7 +313,7 @@ struct AnalyzingView: View {
                     }
                 }
             
-            Text("Our AI stylist is reviewing your outfit")
+            Text(localized(.aiStylistReviewing))
                 .font(ModernTheme.Typography.body)
                 .foregroundColor(ModernTheme.textSecondary)
         }
@@ -305,12 +336,12 @@ struct CreditsHeaderView: View {
                     .rotationEffect(.degrees(isAnimating ? 360 : 0))
                     .animation(.linear(duration: 2).repeatForever(autoreverses: false), value: isAnimating)
                 
-                Text("\(credits)")
+                Text(LocalizationHelpers.formatNumber(credits))
                     .font(ModernTheme.Typography.title2)
                     .fontWeight(.bold)
                     .foregroundColor(ModernTheme.textPrimary)
                 
-                Text("Credits")
+                Text(localized(.credits))
                     .font(ModernTheme.Typography.body)
                     .foregroundColor(ModernTheme.textSecondary)
             }
@@ -324,7 +355,7 @@ struct CreditsHeaderView: View {
             }) {
                 HStack(spacing: ModernTheme.Spacing.xs) {
                     Image(systemName: "plus.circle.fill")
-                    Text("Buy")
+                    Text(localized(.buy))
                 }
                 .font(ModernTheme.Typography.callout)
                 .fontWeight(.medium)
@@ -385,7 +416,7 @@ struct ImageSelectionSection: View {
                         .font(.system(size: 60))
                         .foregroundColor(ModernTheme.primary.opacity(0.3))
                     
-                    Text("Select your outfit photo")
+                    Text(localized(.selectYourOutfitPhoto))
                         .font(ModernTheme.Typography.headline)
                         .foregroundColor(ModernTheme.textSecondary)
                     
@@ -412,4 +443,5 @@ struct ImageSelectionSection: View {
 #Preview {
     ContentView()
         .environmentObject(CreditsManager.shared)
+        .environmentObject(LocalizationManager.shared)
 }

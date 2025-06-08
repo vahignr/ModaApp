@@ -56,7 +56,10 @@ final class ImageCaptureViewModel: ObservableObject {
             if occasion.name == "Custom" && !customOccasion.isEmpty {
                 return customOccasion
             } else {
-                return occasion.name
+                // Get localized occasion name
+                let localizationManager = LocalizationManager.shared
+                let localizedName = localizationManager.string(for: occasion.localizationKey)
+                return localizedName
             }
         }
         return ""
@@ -72,15 +75,30 @@ final class ImageCaptureViewModel: ObservableObject {
     /// Enhanced analysis with occasion context
     func analyzeOutfit() {
         guard let image = selectedImage else { return }
-        guard !occasionText.isEmpty else {
-            error = "Please select an occasion"
+        
+        // Get the occasion text in English for API (API expects English)
+        let occasionForAPI: String
+        if let occasion = selectedOccasion {
+            if occasion.name == "Custom" && !customOccasion.isEmpty {
+                occasionForAPI = customOccasion
+            } else {
+                // Use English name for API
+                occasionForAPI = occasion.name
+            }
+        } else {
+            error = LocalizationManager.shared.string(for: .pleaseSelectOccasion)
+            return
+        }
+        
+        guard !occasionForAPI.isEmpty else {
+            error = LocalizationManager.shared.string(for: .pleaseSelectOccasion)
             return
         }
         
         // Check credits first
         guard creditsManager.useCredit() else {
             showPurchaseView = true
-            error = "No credits remaining. Purchase more to continue."
+            error = LocalizationManager.shared.string(for: .noCreditsRemaining)
             return
         }
         
@@ -98,7 +116,8 @@ final class ImageCaptureViewModel: ObservableObject {
                 print("📤 Calling API for fashion analysis...")
                 let analysis = try await APIService.analyzeFashion(
                     for: image,
-                    occasion: occasionText
+                    occasion: occasionForAPI,
+                    language: LocalizationManager.shared.currentLanguage
                 )
                 
                 print("📥 Received analysis:")
@@ -115,10 +134,17 @@ final class ImageCaptureViewModel: ObservableObject {
                 caption = analysis.overallComment
                 
                 // 2️⃣ Generate TTS for the overall comment
+                let localizationManager = LocalizationManager.shared
+                let localizedOccasion = occasionText // This is already localized for display
+                let voiceInstructions = localizationManager.currentLanguage == .turkish ?
+                    "Etkinlik için kıyafet seçimlerini tartışan samimi bir moda danışmanı olarak konuş: \(localizedOccasion)" :
+                    "Speak as a friendly fashion advisor discussing outfit choices for \(localizedOccasion)"
+                
                 let url = try await APIService.textToSpeech(
                     analysis.overallComment,
                     voice: ConfigurationManager.defaultVoice,
-                    instructions: "Speak as a friendly fashion advisor discussing outfit choices for \(occasionText)"
+                    instructions: voiceInstructions,
+                    language: localizationManager.currentLanguage
                 )
                 audioURL = url
                 try audio.load(fileURL: url)
@@ -149,6 +175,8 @@ final class ImageCaptureViewModel: ObservableObject {
         print("🔎 Starting image search for \(suggestions.count) suggestions")
         isSearchingImages = true
         
+        let currentLanguage = LocalizationManager.shared.currentLanguage
+        
         // Update each suggestion with search results
         for (index, suggestion) in suggestions.enumerated() {
             print("🔍 Searching for suggestion \(index + 1): \(suggestion.item) - Query: '\(suggestion.searchQuery)'")
@@ -156,7 +184,8 @@ final class ImageCaptureViewModel: ObservableObject {
             do {
                 let results = try await SerpAPIService.searchImages(
                     query: suggestion.searchQuery,
-                    count: 5
+                    count: 5,
+                    language: currentLanguage
                 )
                 
                 print("✅ Found \(results.count) images for '\(suggestion.item)'")
@@ -197,7 +226,7 @@ final class ImageCaptureViewModel: ObservableObject {
         // Check credits first
         guard creditsManager.useCredit() else {
             showPurchaseView = true
-            error = "No credits remaining. Purchase more to continue."
+            error = LocalizationManager.shared.string(for: .noCreditsRemaining)
             return
         }
         

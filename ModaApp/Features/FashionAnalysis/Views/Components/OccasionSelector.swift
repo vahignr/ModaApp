@@ -5,16 +5,17 @@ struct OccasionSelector: View {
     @Binding var customOccasion: String
     @State private var showCustomInput = false
     @FocusState private var isCustomFieldFocused: Bool
+    @EnvironmentObject var localizationManager: LocalizationManager
     
     var body: some View {
         VStack(spacing: ModernTheme.Spacing.lg) {
             // Header
             VStack(spacing: ModernTheme.Spacing.xs) {
-                Text("Select the Occasion")
+                Text(localized(.selectTheOccasion))
                     .font(ModernTheme.Typography.headline)
                     .foregroundColor(ModernTheme.textPrimary)
                 
-                Text("Help us style you perfectly for your event")
+                Text(localized(.helpUsStyle))
                     .font(ModernTheme.Typography.callout)
                     .foregroundColor(ModernTheme.textSecondary)
             }
@@ -47,11 +48,11 @@ struct OccasionSelector: View {
             // Custom Input Field
             if showCustomInput {
                 VStack(alignment: .leading, spacing: ModernTheme.Spacing.xs) {
-                    Text("Describe your occasion")
+                    Text(localized(.describeYourOccasion))
                         .font(ModernTheme.Typography.caption)
                         .foregroundColor(ModernTheme.textSecondary)
                     
-                    TextField("e.g., Blues concert at outdoor venue", text: $customOccasion)
+                    TextField(localized(.occasionPlaceholder), text: $customOccasion)
                         .textFieldStyle(CustomTextFieldStyle())
                         .focused($isCustomFieldFocused)
                         .submitLabel(.done)
@@ -70,6 +71,7 @@ struct OccasionCard: View {
     let occasion: Occasion
     let isSelected: Bool
     let action: () -> Void
+    @EnvironmentObject var localizationManager: LocalizationManager
     
     @State private var isPressed = false
     
@@ -101,7 +103,7 @@ struct OccasionCard: View {
                 
                 // Text
                 VStack(spacing: 2) {
-                    Text(occasion.name)
+                    Text(localized(occasion.localizationKey))
                         .font(ModernTheme.Typography.caption)
                         .fontWeight(isSelected ? .semibold : .medium)
                         .foregroundColor(isSelected ? ModernTheme.primary : ModernTheme.textPrimary)
@@ -109,14 +111,12 @@ struct OccasionCard: View {
                         .lineLimit(2)
                         .minimumScaleFactor(0.9)
                     
-                    if !occasion.description.isEmpty {
-                        Text(occasion.description)
-                            .font(ModernTheme.Typography.caption2)
-                            .foregroundColor(ModernTheme.textTertiary)
-                            .multilineTextAlignment(.center)
-                            .lineLimit(2)
-                            .opacity(0.8)
-                    }
+                    Text(localized(occasion.descriptionKey))
+                        .font(ModernTheme.Typography.caption2)
+                        .foregroundColor(ModernTheme.textTertiary)
+                        .multilineTextAlignment(.center)
+                        .lineLimit(2)
+                        .opacity(0.8)
                 }
             }
             .frame(maxWidth: .infinity)
@@ -194,6 +194,7 @@ struct CustomTextFieldStyle: TextFieldStyle {
                 }
             }
             .background(ModernTheme.background)
+            .environmentObject(LocalizationManager.shared)
         }
     }
     

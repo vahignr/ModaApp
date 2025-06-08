@@ -101,6 +101,8 @@ struct Occasion: Identifiable, Equatable {
     let name: String
     let icon: String
     let description: String
+    let localizationKey: LocalizedStringKey
+    let descriptionKey: LocalizedStringKey
     
     static func == (lhs: Occasion, rhs: Occasion) -> Bool {
         lhs.id == rhs.id
@@ -110,62 +112,86 @@ struct Occasion: Identifiable, Equatable {
         Occasion(
             name: "Casual Day Out",
             icon: "sun.max.fill",
-            description: "Relaxed everyday style"
+            description: "Relaxed everyday style",
+            localizationKey: .casualDayOut,
+            descriptionKey: .casualDayOutDesc
         ),
         Occasion(
             name: "Work/Office",
             icon: "briefcase.fill",
-            description: "Professional business attire"
+            description: "Professional business attire",
+            localizationKey: .workOffice,
+            descriptionKey: .workOfficeDesc
         ),
         Occasion(
             name: "First Date",
             icon: "heart.fill",
-            description: "Impressive yet comfortable"
+            description: "Impressive yet comfortable",
+            localizationKey: .firstDate,
+            descriptionKey: .firstDateDesc
         ),
         Occasion(
             name: "Graduation",
             icon: "graduationcap.fill",
-            description: "Formal celebration attire"
+            description: "Formal celebration attire",
+            localizationKey: .graduation,
+            descriptionKey: .graduationDesc
         ),
         Occasion(
             name: "Wedding Guest",
             icon: "sparkles",
-            description: "Elegant formal wear"
+            description: "Elegant formal wear",
+            localizationKey: .weddingGuest,
+            descriptionKey: .weddingGuestDesc
         ),
         Occasion(
             name: "Night Out",
             icon: "moon.stars.fill",
-            description: "Party and club ready"
+            description: "Party and club ready",
+            localizationKey: .nightOut,
+            descriptionKey: .nightOutDesc
         ),
         Occasion(
             name: "Picnic",
             icon: "leaf.fill",
-            description: "Outdoor casual comfort"
+            description: "Outdoor casual comfort",
+            localizationKey: .picnic,
+            descriptionKey: .picnicDesc
         ),
         Occasion(
             name: "Business Meeting",
             icon: "person.2.fill",
-            description: "Executive professional"
+            description: "Executive professional",
+            localizationKey: .businessMeeting,
+            descriptionKey: .businessMeetingDesc
         ),
         Occasion(
             name: "Concert",
             icon: "music.note",
-            description: "Music event style"
+            description: "Music event style",
+            localizationKey: .concert,
+            descriptionKey: .concertDesc
         ),
         Occasion(
             name: "Gym/Workout",
             icon: "figure.run",
-            description: "Athletic and sporty"
+            description: "Athletic and sporty",
+            localizationKey: .gymWorkout,
+            descriptionKey: .gymWorkoutDesc
         ),
         Occasion(
             name: "Beach/Pool",
             icon: "sun.and.horizon.fill",
-            description: "Summer water activities"
+            description: "Summer water activities",
+            localizationKey: .beachPool,
+            descriptionKey: .beachPoolDesc
         ),
         Occasion(
             name: "Custom",
             icon: "pencil.circle.fill",
-            description: "Describe your occasion"
+            description: "Describe your occasion",
+            localizationKey: .custom,
+            descriptionKey: .customDesc
         )
     ]
     
@@ -218,5 +244,9 @@ extension FashionItem {
         default:
             return ModernTheme.textTertiary
         }
+    }
+    
+    func localizedCategoryName(for language: Language) -> String {
+        return LocalizedStrings.categoryName(category, for: language)
     }
 }

@@ -5,7 +5,16 @@ struct ConfigurationManager {
     // MARK: - Voice Settings
     static let availableVoices = ["nova", "shimmer", "echo", "alloy", "fable"]
     static let defaultVoice = "nova"
-    static let defaultVoiceInstructions = "Speak in a warm, natural, and conversational style with an emphasis on sustainable and eco-conscious fashion choices."
+    
+    // Voice instructions based on language
+    static func voiceInstructions(for language: Language) -> String {
+        switch language {
+        case .english:
+            return "Speak in a warm, natural, and conversational style with an emphasis on sustainable and eco-conscious fashion choices."
+        case .turkish:
+            return "Samimi, doğal ve konuşma tarzında konuş. Sürdürülebilir ve çevre dostu moda seçimlerine vurgu yap."
+        }
+    }
     
     // MARK: - API Settings
     static let maxImageSize: CGFloat = 256
@@ -14,7 +23,16 @@ struct ConfigurationManager {
     static let temperature: Float = 0.7
     
     // MARK: - Fashion Analysis Prompt (JSON Response)
-    static func fashionAnalysisPrompt(for occasion: String) -> String {
+    static func fashionAnalysisPrompt(for occasion: String, language: Language) -> String {
+        switch language {
+        case .english:
+            return englishFashionAnalysisPrompt(for: occasion)
+        case .turkish:
+            return turkishFashionAnalysisPrompt(for: occasion)
+        }
+    }
+    
+    private static func englishFashionAnalysisPrompt(for occasion: String) -> String {
         return """
         You are an expert fashion stylist analyzing an outfit for a specific occasion.
         
@@ -62,8 +80,65 @@ struct ConfigurationManager {
         """
     }
     
+    private static func turkishFashionAnalysisPrompt(for occasion: String) -> String {
+        return """
+        Belirli bir etkinlik için kıyafet analiz eden uzman bir moda stilistisiniz.
+        
+        Etkinlik: \(occasion)
+        
+        Görseldeki kıyafeti analiz edin ve JSON formatında detaylı bir yanıt verin.
+        
+        SADECE geçerli JSON objesi döndürmelisiniz (markdown yok, sadece JSON):
+        {
+          "overallComment": "Kıyafetin etkinliğe ne kadar uygun olduğu hakkında sıcak, samimi bir paragraf (100-150 kelime). Neyin işe yaradığı ve nelerin geliştirilebileceği konusunda spesifik olun.",
+          "currentItems": [
+            {
+              "category": "top",
+              "description": "Altın düğmeli lacivert blazer ceket",
+              "colorAnalysis": "Derin lacivert sofistike bir hava katıyor",
+              "styleNotes": "Klasik kesim iş ortamları için çok uygun"
+            }
+          ],
+          "suggestions": [
+            {
+              "item": "Beyaz deri spor ayakkabı",
+              "reason": "Etkinlik için rahat kalırken modern bir dokunuş katacaktır",
+              "searchQuery": "beyaz deri spor ayakkabı kadın"
+            },
+            {
+              "item": "Altın halka küpe",
+              "reason": "Altın düğmeleri tamamlayacak ve zarafet katacaktır",
+              "searchQuery": "altın halka küpe orta boy"
+            },
+            {
+              "item": "Kahverengi deri çapraz çanta",
+              "reason": "Eller serbest rahatlık için pratik ve şık",
+              "searchQuery": "kahverengi deri çapraz çanta"
+            }
+          ]
+        }
+        
+        Gereksinimler:
+        - currentItems dizisinde görünen TÜM giysi öğelerini listeleyin
+        - Kategori şunlardan biri olmalı: top/bottom/dress/shoes/outerwear/accessory/bag/jewelry/hat/sunglasses
+        - TAM OLARAK 3 öneri verin
+        - Her öneri şunları içermeli: item (spesifik isim), reason (\(occasion) için neden yardımcı olur), searchQuery (3-5 kelime)
+        - Arama sorgularını spesifik ve Google dostu yapın
+        - SADECE geçerli JSON döndürün, ek metin veya markdown yok
+        """
+    }
+    
     // MARK: - Fashion Prompt (Original - for backward compatibility)
-    static let fashionPrompt = """
+    static func fashionPrompt(for language: Language) -> String {
+        switch language {
+        case .english:
+            return englishFashionPrompt
+        case .turkish:
+            return turkishFashionPrompt
+        }
+    }
+    
+    private static let englishFashionPrompt = """
     You are a top-tier fashion stylist with a focus on sustainable and eco-conscious style, speaking to a client who just sent you a photo of their outfit.
 
     • First, open with one warm compliment about the overall look (max 1 short sentence).
@@ -79,13 +154,41 @@ struct ConfigurationManager {
     Target length: 120–180 words. No bullet lists or headings—write as a smooth conversational paragraph.
     """
     
+    private static let turkishFashionPrompt = """
+    Sürdürülebilir ve çevre dostu stile odaklanan üst düzey bir moda stilistisiniz, size kıyafet fotoğrafı gönderen bir müşterinizle konuşuyorsunuz.
+
+    • İlk olarak, genel görünüm hakkında sıcak bir iltifatla başlayın (maksimum 1 kısa cümle).
+    • Sonra kıyafeti 3-4 cümlede analiz edin:
+        – Gördüğünüz ana giysileri, renkleri, uyumu ve stil havasını belirtin.
+        – Moda açısından neyin iyi çalıştığını vurgulayın (orantılar, renk uyumu, doku, trend uyumu vb.).
+        – İlgili olduğunda, zamansız parçalar, kaliteli malzemeler veya çok yönlü stil gibi sürdürülebilir seçimleri takdir edin.
+    • Müşterinizin bir dahaki sefere deneyebileceği 2 özlü, yapıcı öneri sunun (örn. aksesuar değişimi, katmanlama fikri, renk patlaması, sürdürülebilir alternatifler).
+    • Kişisel stil yolculuklarını pekiştiren cesaretlendirici bir kapanışla bitirin.
+
+    Ton: neşeli, samimi, doğal sıcak ve güven artırıcı—asla yargılayıcı değil.
+    Kişisel özellikleri (yaş, cinsiyet, etnik köken, vücut şekli) tahmin ETMEYİN veya kişinin vücudu hakkında yorum yapmayın; sadece görselde görünen giyim ve stil seçimlerine odaklanın.
+    Hedef uzunluk: 120-180 kelime. Madde işaretleri veya başlık yok—akıcı konuşma paragrafı olarak yazın.
+    """
+    
     // MARK: - App Settings
     static let enableHaptics = true
     static let autoPlayAudio = false
     static let saveHistory = true
-    static let maxHistoryItems = 20  // Increased for sustainable wardrobe tracking
-    static let appTagline = "Sustainable Style, Naturally Beautiful"
-    static let appDescription = "Your eco-conscious fashion companion"
+    static let maxHistoryItems = 20
+    
+    // Dynamic app tagline and description based on language
+    static func appTagline(for language: Language) -> String {
+        LocalizedStrings.get(.tagline, for: language)
+    }
+    
+    static func appDescription(for language: Language) -> String {
+        switch language {
+        case .english:
+            return "Your eco-conscious fashion companion"
+        case .turkish:
+            return "Çevre dostu moda arkadaşınız"
+        }
+    }
     
     // MARK: - Model Settings
     static let visionModel = "gpt-4o-mini"

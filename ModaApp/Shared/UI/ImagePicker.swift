@@ -3,7 +3,7 @@
 //  ModaApp
 //
 //  Created by Vahi Guner on 6/3/25.
-//  Updated with ModernTheme styling
+//  Updated with ModernTheme styling and localization
 //
 
 import SwiftUI
@@ -35,7 +35,7 @@ struct ImagePicker: View {
                         .progressViewStyle(CircularProgressViewStyle(tint: .white))
                         .scaleEffect(0.8)
                     
-                    Text("Loading...")
+                    Text(LocalizationManager.shared.string(for: .loading))
                         .font(ModernTheme.Typography.body)
                         .fontWeight(.medium)
                 }
@@ -46,7 +46,7 @@ struct ImagePicker: View {
                 .cornerRadius(ModernTheme.CornerRadius.full)
             } else {
                 PrimaryButton(
-                    title: title ?? (selectedImage == nil ? "Select Photo" : "Change Photo"),
+                    title: title ?? (selectedImage == nil ? LocalizationManager.shared.string(for: .selectPhoto) : LocalizationManager.shared.string(for: .changePhoto)),
                     systemImage: "photo.fill",
                     style: selectedImage == nil ? .primary : .secondary
                 )
@@ -105,21 +105,21 @@ struct ImageSourcePicker: View {
             showingActionSheet = true
         }) {
             PrimaryButton(
-                title: selectedImage == nil ? "Add Photo" : "Change Photo",
+                title: selectedImage == nil ? LocalizationManager.shared.string(for: .selectPhoto) : LocalizationManager.shared.string(for: .changePhoto),
                 systemImage: "leaf.camera.fill",
                 style: .primary
             )
         }
-        .confirmationDialog("Select Source", isPresented: $showingActionSheet) {
-            Button("Photo Library") {
+        .confirmationDialog(LocalizationManager.shared.string(for: .selectSource), isPresented: $showingActionSheet) {
+            Button(LocalizationManager.shared.string(for: .photoLibrary)) {
                 showingImagePicker = true
             }
             
-            Button("Camera") {
+            Button(LocalizationManager.shared.string(for: .camera)) {
                 showingCamera = true
             }
             
-            Button("Cancel", role: .cancel) { }
+            Button(LocalizationManager.shared.string(for: .cancel), role: .cancel) { }
         }
         .sheet(isPresented: $showingImagePicker) {
             PhotosPicker(
@@ -127,7 +127,7 @@ struct ImageSourcePicker: View {
                 matching: .images,
                 photoLibrary: .shared()
             ) {
-                Text("Select from Library")
+                Text(LocalizationManager.shared.string(for: .selectFromLibrary))
             }
             .onChange(of: pickerItem) { _, _ in
                 Task {
@@ -165,4 +165,5 @@ struct ImageSourcePicker: View {
     }
     .padding(ModernTheme.Spacing.xl)
     .background(ModernTheme.background)
+    .environmentObject(LocalizationManager.shared)
 }

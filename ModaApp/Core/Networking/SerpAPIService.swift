@@ -38,15 +38,15 @@ struct SerpAPIService {
     ]
     
     // MARK: - Main Search Function
-    static func searchImages(query: String, count: Int = 5) async throws -> [SearchResult] {
-        print("🔍 SerpAPI: Searching for '\(query)' (count: \(count))")
+    static func searchImages(query: String, count: Int = 5, language: Language = LocalizationManager.shared.currentLanguage) async throws -> [SearchResult] {
+        print("🔍 SerpAPI: Searching for '\(query)' (count: \(count), language: \(language.rawValue))")
         
         var allResults: [SearchResult] = []
         var page = 0
         
         // Keep searching until we have enough results
         while allResults.count < count && page < 3 { // Max 3 pages to avoid too many requests
-            let pageResults = try await searchPage(query: query, page: page)
+            let pageResults = try await searchPage(query: query, page: page, language: language)
             print("📄 SerpAPI: Page \(page) returned \(pageResults.count) results")
             
             // Filter results
@@ -85,7 +85,7 @@ struct SerpAPIService {
     }
     
     // MARK: - Search Single Page
-    private static func searchPage(query: String, page: Int) async throws -> [SearchResult] {
+    private static func searchPage(query: String, page: Int, language: Language = .english) async throws -> [SearchResult] {
         // Build URL with parameters
         var components = URLComponents(string: baseURL)
         components?.queryItems = [
@@ -93,6 +93,8 @@ struct SerpAPIService {
             URLQueryItem(name: "q", value: query),
             URLQueryItem(name: "ijn", value: String(page)),
             URLQueryItem(name: "num", value: "40"),  // Reduced from 100
+            URLQueryItem(name: "hl", value: language == .turkish ? "tr" : "en"),  // Set search language
+            URLQueryItem(name: "gl", value: language == .turkish ? "tr" : "us"),  // Set country
             URLQueryItem(name: "api_key", value: SecretsManager.serpAPIKey)
         ]
         
@@ -169,10 +171,21 @@ struct SerpAPIService {
             let apiKey = SecretsManager.serpAPIKey
             print("🔑 SerpAPI Key: \(apiKey.prefix(10))...")
             
-            print("🔍 Testing SerpAPI with query: 'leather jacket women'")
-            let results = try await searchImages(query: "leather jacket women", count: 3)
-            print("✅ Found \(results.count) results:")
-            for (index, result) in results.enumerated() {
+            // Test English search
+            print("🔍 Testing SerpAPI with English query: 'leather jacket women'")
+            let englishResults = try await searchImages(query: "leather jacket women", count: 3, language: .english)
+            print("✅ Found \(englishResults.count) English results:")
+            for (index, result) in englishResults.enumerated() {
+                print("\(index + 1). \(result.title)")
+                print("   URL: \(result.imageUrl)")
+                print("   Size: \(result.width ?? 0)x\(result.height ?? 0)")
+            }
+            
+            // Test Turkish search
+            print("\n🔍 Testing SerpAPI with Turkish query: 'deri ceket kadın'")
+            let turkishResults = try await searchImages(query: "deri ceket kadın", count: 3, language: .turkish)
+            print("✅ Found \(turkishResults.count) Turkish results:")
+            for (index, result) in turkishResults.enumerated() {
                 print("\(index + 1). \(result.title)")
                 print("   URL: \(result.imageUrl)")
                 print("   Size: \(result.width ?? 0)x\(result.height ?? 0)")

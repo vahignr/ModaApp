@@ -34,7 +34,7 @@ struct APIService {
     // MARK: - Fashion Analysis (JSON Response) --------------------------------
     
     /// Analyzes outfit for a specific occasion and returns structured data
-    static func analyzeFashion(for image: UIImage, occasion: String) async throws -> FashionAnalysis {
+    static func analyzeFashion(for image: UIImage, occasion: String, language: Language = LocalizationManager.shared.currentLanguage) async throws -> FashionAnalysis {
         let base64 = try await resizeAndEncode(image,
                                                maxEdge: ConfigurationManager.maxImageSize,
                                                quality: ConfigurationManager.imageQuality)
@@ -43,7 +43,7 @@ struct APIService {
         let messages: [[String: Any]] = [
             [
                 "role": "system",
-                "content": ConfigurationManager.fashionAnalysisPrompt(for: occasion)
+                "content": ConfigurationManager.fashionAnalysisPrompt(for: occasion, language: language)
             ],
             [
                 "role": "user",
@@ -111,7 +111,7 @@ struct APIService {
     // MARK: - Vision (Original) -----------------------------------------------
     
     /// Sends the outfit photo to GPT-4o Vision and returns the stylist comment.
-    static func generateCaption(for image: UIImage) async throws -> String {
+    static func generateCaption(for image: UIImage, language: Language = LocalizationManager.shared.currentLanguage) async throws -> String {
         let base64 = try await resizeAndEncode(image,
                                                maxEdge: ConfigurationManager.maxImageSize,
                                                quality: ConfigurationManager.imageQuality)
@@ -120,7 +120,7 @@ struct APIService {
         let messages: [[String: Any]] = [
             [
                 "role": "system",
-                "content": ConfigurationManager.fashionPrompt
+                "content": ConfigurationManager.fashionPrompt(for: language)
             ],
             [
                 "role": "user",
@@ -154,12 +154,13 @@ struct APIService {
     
     static func textToSpeech(_ text: String,
                              voice: String? = nil,
-                             instructions: String? = nil) async throws -> URL {
+                             instructions: String? = nil,
+                             language: Language = LocalizationManager.shared.currentLanguage) async throws -> URL {
         let body: [String: Any] = [
             "model": ConfigurationManager.ttsModel,
             "voice": voice ?? ConfigurationManager.defaultVoice,
             "input": text,
-            "instructions": instructions ?? ConfigurationManager.defaultVoiceInstructions,
+            "instructions": instructions ?? ConfigurationManager.voiceInstructions(for: language),
             "speed": ConfigurationManager.ttsSpeed,
             "output_format": ConfigurationManager.outputFormat
         ]

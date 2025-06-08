@@ -11,6 +11,7 @@ struct FashionResultsView: View {
     @State private var expandedItems: Set<UUID> = []
     @State private var showFullImage = false
     @State private var selectedImageURL: String?
+    @EnvironmentObject var localizationManager: LocalizationManager
     
     var body: some View {
         VStack(spacing: ModernTheme.Spacing.lg) {
@@ -24,14 +25,14 @@ struct FashionResultsView: View {
             // Tab Selection
             CustomSegmentedControl(
                 selection: $selectedTab,
-                options: ["Current Outfit", "Style Suggestions"]
+                options: [localized(.currentOutfit), localized(.styleSuggestions)]
             )
             .padding(.horizontal)
             .onChange(of: selectedTab) { _, newValue in
                 print("📱 Tab changed to: \(newValue == 0 ? "Current Outfit" : "Style Suggestions")")
             }
             
-            // Tab Content - FIXED: Using conditional views instead of TabView
+            // Tab Content - Using conditional views instead of TabView
             Group {
                 if selectedTab == 0 {
                     // Current Items Tab
@@ -62,7 +63,7 @@ struct FashionResultsView: View {
             // New Analysis Button
             Button(action: onNewAnalysis) {
                 PrimaryButton(
-                    title: "Analyze New Outfit",
+                    title: localized(.analyzeNewOutfit),
                     systemImage: "camera.fill",
                     style: .primary
                 )
@@ -101,7 +102,7 @@ struct OverallCommentCard: View {
                     .font(.system(size: 20))
                     .foregroundColor(ModernTheme.primary)
                 
-                Text("AI Stylist Analysis")
+                Text(localized(.aiStylistAnalysis))
                     .font(ModernTheme.Typography.headline)
                     .foregroundColor(ModernTheme.textPrimary)
                 
@@ -140,11 +141,11 @@ struct OverallCommentCard: View {
                             }
                             
                             VStack(alignment: .leading, spacing: 4) {
-                                Text(audioManager.isPlaying ? "Playing Analysis" : "Listen to Analysis")
+                                Text(audioManager.isPlaying ? localized(.playingAnalysis) : localized(.listenToAnalysis))
                                     .font(ModernTheme.Typography.callout)
                                     .foregroundColor(ModernTheme.textPrimary)
                                 
-                                Text("AI Stylist Voice")
+                                Text(localized(.aiStylistVoice))
                                     .font(ModernTheme.Typography.caption)
                                     .foregroundColor(ModernTheme.textSecondary)
                             }
@@ -180,7 +181,7 @@ struct CurrentItemsView: View {
         ScrollView {
             VStack(spacing: ModernTheme.Spacing.md) {
                 if items.isEmpty {
-                    Text("No outfit items detected")
+                    Text(localized(.noOutfitItemsDetected))
                         .font(ModernTheme.Typography.body)
                         .foregroundColor(ModernTheme.textSecondary)
                         .padding()
@@ -216,6 +217,7 @@ struct CurrentItemCard: View {
     let item: FashionItem
     let isExpanded: Bool
     let onTap: () -> Void
+    @EnvironmentObject var localizationManager: LocalizationManager
     
     var body: some View {
         VStack(alignment: .leading, spacing: ModernTheme.Spacing.sm) {
@@ -229,7 +231,7 @@ struct CurrentItemCard: View {
                     .clipShape(Circle())
                 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(item.category.capitalized)
+                    Text(item.localizedCategoryName(for: localizationManager.currentLanguage))
                         .font(ModernTheme.Typography.headline)
                         .foregroundColor(ModernTheme.textPrimary)
                     
@@ -249,7 +251,7 @@ struct CurrentItemCard: View {
                 VStack(alignment: .leading, spacing: ModernTheme.Spacing.sm) {
                     // Color Analysis
                     VStack(alignment: .leading, spacing: 4) {
-                        Label("Color", systemImage: "paintpalette")
+                        Label(localized(.color), systemImage: "paintpalette")
                             .font(ModernTheme.Typography.caption)
                             .foregroundColor(ModernTheme.primary)
                         
@@ -260,7 +262,7 @@ struct CurrentItemCard: View {
                     
                     // Style Notes
                     VStack(alignment: .leading, spacing: 4) {
-                        Label("Style Notes", systemImage: "sparkles")
+                        Label(localized(.styleNotes), systemImage: "sparkles")
                             .font(ModernTheme.Typography.caption)
                             .foregroundColor(ModernTheme.primary)
                         
@@ -298,7 +300,7 @@ struct SuggestionsView: View {
         ScrollView {
             VStack(spacing: ModernTheme.Spacing.lg) {
                 if suggestions.isEmpty {
-                    Text("No suggestions available")
+                    Text(localized(.noSuggestionsAvailable))
                         .font(ModernTheme.Typography.body)
                         .foregroundColor(ModernTheme.textSecondary)
                         .padding()
@@ -337,6 +339,7 @@ struct SuggestionCard: View {
     let isSearchingImages: Bool
     let onImageTap: (String) -> Void
     @State private var loadedImages: Set<String> = []
+    @EnvironmentObject var localizationManager: LocalizationManager
     
     var body: some View {
         VStack(alignment: .leading, spacing: ModernTheme.Spacing.md) {
@@ -362,7 +365,7 @@ struct SuggestionCard: View {
             
             // Search Results Debug Info
             if let results = suggestion.searchResults {
-                Text("Found \(results.count) images")
+                Text(LocalizedStrings.getFormatted(.foundNImages, for: localizationManager.currentLanguage, args: results.count))
                     .font(ModernTheme.Typography.caption2)
                     .foregroundColor(ModernTheme.textTertiary)
                     .padding(.horizontal, ModernTheme.Spacing.xs)
@@ -404,7 +407,7 @@ struct SuggestionCard: View {
                 }
             } else {
                 // No results state
-                Text("No images found for this suggestion")
+                Text(localized(.noImagesFound))
                     .font(ModernTheme.Typography.caption)
                     .foregroundColor(ModernTheme.textTertiary)
                     .padding(.horizontal, ModernTheme.Spacing.xs)
@@ -479,7 +482,7 @@ struct SearchResultImage: View {
                         VStack {
                             Image(systemName: "photo")
                                 .foregroundColor(ModernTheme.textTertiary)
-                            Text("Failed")
+                            Text(localized(.failed))
                                 .font(.caption2)
                                 .foregroundColor(ModernTheme.textTertiary)
                         }
@@ -563,7 +566,7 @@ struct ImageDetailView: View {
             }
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Done") {
+                    Button(localized(.done)) {
                         dismiss()
                     }
                     .foregroundColor(.white)
@@ -607,4 +610,5 @@ struct ImageDetailView: View {
         isSearchingImages: false,
         onNewAnalysis: {}
     )
+    .environmentObject(LocalizationManager.shared)
 }
