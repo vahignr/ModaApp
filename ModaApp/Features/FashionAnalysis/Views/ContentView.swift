@@ -240,38 +240,58 @@ struct OccasionSelectionView: View {
     
     var body: some View {
         VStack(spacing: ModernTheme.Spacing.lg) {
-            // Occasion Selector
-            OccasionSelector(
-                selectedOccasion: $vm.selectedOccasion,
-                customOccasion: $vm.customOccasion
-            )
-            .padding(.horizontal)
-            
-            // Action Buttons
+            // Action Buttons at the top
             HStack(spacing: ModernTheme.Spacing.md) {
                 Button {
                     withAnimation {
                         currentStep = .selectImage
                     }
                 } label: {
-                    PrimaryButton(
-                        title: localized(.back),
-                        systemImage: "chevron.left",
-                        style: .secondary
-                    )
+                    HStack {
+                        Image(systemName: "chevron.left")
+                        Text(localized(.back))
+                    }
+                    .font(ModernTheme.Typography.body)
+                    .foregroundColor(ModernTheme.primary)
                 }
+                
+                Spacer()
                 
                 Button {
                     vm.analyzeOutfit()
                 } label: {
-                    PrimaryButton(
-                        title: localized(.analyzeStyle),
-                        systemImage: "sparkles",
-                        enabled: vm.canAnalyze && vm.hasCredits
+                    HStack(spacing: ModernTheme.Spacing.xs) {
+                        Text(localized(.analyzeStyle))
+                            .fontWeight(.semibold)
+                        Image(systemName: "sparkles")
+                    }
+                    .font(ModernTheme.Typography.body)
+                    .foregroundColor(.white)
+                    .padding(.horizontal, ModernTheme.Spacing.lg)
+                    .padding(.vertical, ModernTheme.Spacing.sm)
+                    .background(
+                        Capsule()
+                            .fill(vm.canAnalyze && vm.hasCredits ?
+                                ModernTheme.primaryGradient :
+                                LinearGradient(colors: [Color.gray, Color.gray], startPoint: .leading, endPoint: .trailing))
+                    )
+                    .shadow(
+                        color: vm.canAnalyze && vm.hasCredits ? ModernTheme.primary.opacity(0.3) : Color.clear,
+                        radius: 8,
+                        x: 0,
+                        y: 4
                     )
                 }
+                .disabled(!vm.canAnalyze || !vm.hasCredits)
             }
-            .padding(.horizontal, ModernTheme.Spacing.xl)
+            .padding(.horizontal, ModernTheme.Spacing.lg)
+            
+            // Occasion Selector
+            OccasionSelector(
+                selectedOccasion: $vm.selectedOccasion,
+                customOccasion: $vm.customOccasion
+            )
+            .padding(.horizontal)
         }
     }
 }

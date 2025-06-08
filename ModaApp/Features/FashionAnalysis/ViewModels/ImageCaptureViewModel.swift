@@ -17,8 +17,8 @@ final class ImageCaptureViewModel: ObservableObject {
     // Image selection
     @Published var selectedImage: UIImage?       // the photo user picked
     
-    // Occasion selection
-    @Published var selectedOccasion: Occasion?   // selected occasion
+    // Occasion selection - Default to "Casual Day Out"
+    @Published var selectedOccasion: Occasion? = Occasion.presets.first   // Default to first occasion
     @Published var customOccasion: String = ""   // custom occasion text
     
     // Processing state
@@ -259,7 +259,7 @@ final class ImageCaptureViewModel: ObservableObject {
     /// Reset everything including image and occasion
     func resetAll() {
         selectedImage = nil
-        selectedOccasion = nil
+        selectedOccasion = Occasion.presets.first  // Reset to default
         customOccasion = ""
         resetOutputs()
     }

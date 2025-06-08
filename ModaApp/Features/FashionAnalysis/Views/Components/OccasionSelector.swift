@@ -63,6 +63,12 @@ struct OccasionSelector: View {
                 ))
             }
         }
+        .onAppear {
+            // Check if custom occasion should be shown
+            if selectedOccasion?.name == "Custom" && !customOccasion.isEmpty {
+                showCustomInput = true
+            }
+        }
     }
 }
 
@@ -169,7 +175,7 @@ struct CustomTextFieldStyle: TextFieldStyle {
 // MARK: - Preview
 #Preview {
     struct PreviewWrapper: View {
-        @State var selectedOccasion: Occasion?
+        @State var selectedOccasion: Occasion? = Occasion.presets.first
         @State var customOccasion = ""
         
         var body: some View {
