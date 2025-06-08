@@ -36,7 +36,7 @@ struct ContentView: View {
                         // ── Step Indicator ─────────────────────────────────
                         StepIndicator(currentStep: currentStep)
                             .padding(.horizontal)
-                            .padding(.top, ModernTheme.Spacing.md)
+                            .padding(.top, ModernTheme.Spacing.xs) // Reduced from .md to .xs
                         
                         // ── Main Content Based on Step ─────────────────────
                         Group {
@@ -72,7 +72,7 @@ struct ContentView: View {
                 }
             }
             .navigationTitle(localized(.modaAnalyzer))
-            .navigationBarTitleDisplayMode(.large)
+            .navigationBarTitleDisplayMode(.inline) // Changed from .large to .inline
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button {
@@ -139,37 +139,44 @@ struct StepIndicator: View {
     }
     
     var body: some View {
-        HStack(spacing: 0) {
+        HStack(spacing: ModernTheme.Spacing.xs) {
             ForEach(Array(steps.enumerated()), id: \.offset) { index, step in
-                HStack(spacing: 0) {
-                    // Step Circle
-                    ZStack {
-                        Circle()
-                            .fill(isStepCompleted(step.0) ? ModernTheme.primary : ModernTheme.lightSage)
-                            .frame(width: 32, height: 32)
+                HStack(spacing: ModernTheme.Spacing.xs) {
+                    // Step with icon and label
+                    VStack(spacing: 4) {
+                        // Step Circle
+                        ZStack {
+                            Circle()
+                                .fill(isStepCompleted(step.0) ? ModernTheme.primary : ModernTheme.lightSage)
+                                .frame(width: 36, height: 36)
+                            
+                            Image(systemName: step.1)
+                                .font(.system(size: 16, weight: .medium))
+                                .foregroundColor(isStepCompleted(step.0) ? .white : ModernTheme.primary)
+                        }
                         
-                        Image(systemName: step.1)
-                            .font(.system(size: 14, weight: .medium))
-                            .foregroundColor(isStepCompleted(step.0) ? .white : ModernTheme.primary)
+                        // Step Label
+                        Text(localized(step.2))
+                            .font(ModernTheme.Typography.caption2)
+                            .foregroundColor(isStepCompleted(step.0) ? ModernTheme.primary : ModernTheme.textTertiary)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)
                     }
-                    
-                    // Step Label
-                    Text(localized(step.2))
-                        .font(ModernTheme.Typography.caption)
-                        .foregroundColor(isStepCompleted(step.0) ? ModernTheme.primary : ModernTheme.textTertiary)
-                        .padding(.leading, 4)
+                    .frame(maxWidth: .infinity)
                     
                     // Connector Line
                     if index < steps.count - 1 {
-                        Rectangle()
-                            .fill(isStepCompleted(steps[index + 1].0) ? ModernTheme.primary : ModernTheme.lightSage)
-                            .frame(height: 2)
-                            .padding(.horizontal, 8)
+                        VStack {
+                            Rectangle()
+                                .fill(isStepCompleted(steps[index + 1].0) ? ModernTheme.primary : ModernTheme.lightSage)
+                                .frame(width: 20, height: 2)
+                                .offset(y: -14) // Align with circles
+                        }
                     }
                 }
             }
         }
-        .padding(.vertical, ModernTheme.Spacing.md)
+        .padding(.vertical, ModernTheme.Spacing.sm)
     }
     
     private func isStepCompleted(_ step: ContentView.Step) -> Bool {

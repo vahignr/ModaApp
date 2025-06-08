@@ -40,7 +40,7 @@ struct HomeView: View {
                         VStack(spacing: ModernTheme.Spacing.xl) {
                             // Welcome Section
                             WelcomeSection()
-                                .padding(.top, 80) // Space from top
+                                .padding(.top, 20) // Reduced from 80 to 20
                                 .opacity(animateElements ? 1 : 0)
                                 .offset(y: animateElements ? 0 : 20)
                             
