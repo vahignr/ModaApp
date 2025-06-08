@@ -2,6 +2,12 @@ import Foundation
 
 struct ConfigurationManager {
     
+    // MARK: - API Endpoints
+    static let openAIBaseURL = "https://api.openai.com"
+    static let openAIChatEndpoint = "\(openAIBaseURL)/v1/chat/completions"
+    static let openAISpeechEndpoint = "\(openAIBaseURL)/v1/audio/speech"
+    static let serpAPIBaseURL = "https://serpapi.com/search.json"
+    
     // MARK: - Voice Settings
     static let availableVoices = ["nova", "shimmer", "echo", "alloy", "fable"]
     static let defaultVoice = "nova"
@@ -20,7 +26,32 @@ struct ConfigurationManager {
     static let maxImageSize: CGFloat = 256
     static let imageQuality: CGFloat = 0.6
     static let maxTokens = 500
+    static let maxAnalysisTokens = 1500
     static let temperature: Float = 0.7
+    static let analysisTemperature: Float = 0.3
+    
+    // MARK: - Image Search Settings
+    static let minImageWidth = 200
+    static let maxSearchPages = 3
+    static let imagesPerPage = 40
+    static let maxImagesPerSuggestion = 5
+    
+    // Blocklist of domains to avoid
+    static let blockedImageDomains = [
+        "lookaside.instagram.com",
+        "lookaside.fbsbx.com",
+        "img.uefa.com"
+    ]
+    
+    // MARK: - Credits Configuration
+    static let initialFreeCredits = 3
+    static let creditCostPerAnalysis = 1
+    
+    // MARK: - UI Configuration
+    static let stepIndicatorSize: CGFloat = 32
+    static let animationDuration: Double = 0.3
+    static let loadingAnimationDuration: Double = 2.0
+    static let toastDisplayDuration: Double = 3.0
     
     // MARK: - Fashion Analysis Prompt (JSON Response)
     static func fashionAnalysisPrompt(for occasion: String, language: Language) -> String {

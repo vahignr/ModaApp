@@ -14,74 +14,84 @@ struct FashionResultsView: View {
     @EnvironmentObject var localizationManager: LocalizationManager
     
     var body: some View {
-        VStack(spacing: ModernTheme.Spacing.lg) {
-            // Overall Comment Card
-            OverallCommentCard(
-                comment: analysis.overallComment,
-                audioManager: audioManager,
-                audioURL: audioURL
-            )
-            
-            // Tab Selection
-            CustomSegmentedControl(
-                selection: $selectedTab,
-                options: [localized(.currentOutfit), localized(.styleSuggestions)]
-            )
-            .padding(.horizontal)
-            .onChange(of: selectedTab) { _, newValue in
-                print("📱 Tab changed to: \(newValue == 0 ? "Current Outfit" : "Style Suggestions")")
+        ZStack {
+            VStack(spacing: ModernTheme.Spacing.lg) {
+                // Overall Comment Card
+                OverallCommentCard(
+                    comment: analysis.overallComment,
+                    audioManager: audioManager,
+                    audioURL: audioURL
+                )
+                
+                // Tab Selection
+                CustomSegmentedControl(
+                    selection: $selectedTab,
+                    options: [localized(.currentOutfit), localized(.styleSuggestions)]
+                )
+                .padding(.horizontal)
+                
+                // Tab Content
+                Group {
+                    if selectedTab == 0 {
+                        CurrentItemsView(
+                            items: analysis.currentItems,
+                            expandedItems: $expandedItems
+                        )
+                        .transition(.asymmetric(
+                            insertion: .move(edge: .leading).combined(with: .opacity),
+                            removal: .move(edge: .trailing).combined(with: .opacity)
+                        ))
+                    } else {
+                        SuggestionsView(
+                            suggestions: analysis.suggestions,
+                            isSearchingImages: isSearchingImages,
+                            showFullImage: $showFullImage,
+                            selectedImageURL: $selectedImageURL
+                        )
+                        .transition(.asymmetric(
+                            insertion: .move(edge: .trailing).combined(with: .opacity),
+                            removal: .move(edge: .leading).combined(with: .opacity)
+                        ))
+                    }
+                }
+                .animation(.easeInOut(duration: 0.3), value: selectedTab)
             }
             
-            // Tab Content - Using conditional views instead of TabView
-            Group {
-                if selectedTab == 0 {
-                    // Current Items Tab
-                    CurrentItemsView(
-                        items: analysis.currentItems,
-                        expandedItems: $expandedItems
-                    )
-                    .transition(.asymmetric(
-                        insertion: .move(edge: .leading).combined(with: .opacity),
-                        removal: .move(edge: .trailing).combined(with: .opacity)
-                    ))
-                } else {
-                    // Suggestions Tab
-                    SuggestionsView(
-                        suggestions: analysis.suggestions,
-                        isSearchingImages: isSearchingImages,
-                        showFullImage: $showFullImage,
-                        selectedImageURL: $selectedImageURL
-                    )
-                    .transition(.asymmetric(
-                        insertion: .move(edge: .trailing).combined(with: .opacity),
-                        removal: .move(edge: .leading).combined(with: .opacity)
-                    ))
+            // Floating Action Button
+            VStack {
+                Spacer()
+                HStack {
+                    Spacer()
+                    Button(action: onNewAnalysis) {
+                        HStack(spacing: ModernTheme.Spacing.xs) {
+                            Image(systemName: "camera.fill")
+                                .font(.system(size: 20, weight: .medium))
+                            Text(localized(.analyzeNewOutfit))
+                                .font(ModernTheme.Typography.headline)
+                                .fontWeight(.semibold)
+                        }
+                        .foregroundColor(.white)
+                        .padding(.horizontal, ModernTheme.Spacing.lg)
+                        .padding(.vertical, ModernTheme.Spacing.md)
+                        .background(
+                            Capsule()
+                                .fill(ModernTheme.primaryGradient)
+                                .shadow(
+                                    color: ModernTheme.primary.opacity(0.3),
+                                    radius: 12,
+                                    x: 0,
+                                    y: 6
+                                )
+                        )
+                    }
+                    .padding(.trailing, ModernTheme.Spacing.lg)
+                    .padding(.bottom, ModernTheme.Spacing.xl)
                 }
             }
-            .animation(.easeInOut(duration: 0.3), value: selectedTab)
-            
-            // New Analysis Button
-            Button(action: onNewAnalysis) {
-                PrimaryButton(
-                    title: localized(.analyzeNewOutfit),
-                    systemImage: "camera.fill",
-                    style: .primary
-                )
-            }
-            .padding(.horizontal, ModernTheme.Spacing.xl)
-            .padding(.bottom, ModernTheme.Spacing.lg)
         }
         .sheet(isPresented: $showFullImage) {
             if let imageURL = selectedImageURL {
                 ImageDetailView(imageURL: imageURL)
-            }
-        }
-        .onAppear {
-            print("📋 FashionResultsView appeared")
-            print("   - Current items: \(analysis.currentItems.count)")
-            print("   - Suggestions: \(analysis.suggestions.count)")
-            for (index, suggestion) in analysis.suggestions.enumerated() {
-                print("     \(index + 1). \(suggestion.item) - Has \(suggestion.searchResults?.count ?? 0) images")
             }
         }
     }
@@ -204,10 +214,7 @@ struct CurrentItemsView: View {
                 }
             }
             .padding(.horizontal)
-            .padding(.bottom, ModernTheme.Spacing.xxl)
-        }
-        .onAppear {
-            print("📋 CurrentItemsView appeared with \(items.count) items")
+            .padding(.bottom, 100) // Space for FAB
         }
     }
 }
@@ -318,27 +325,17 @@ struct SuggestionsView: View {
                 }
             }
             .padding(.horizontal)
-            .padding(.bottom, ModernTheme.Spacing.xxl)
-        }
-        .onAppear {
-            print("📋 SuggestionsView appeared with \(suggestions.count) suggestions")
-            for (index, suggestion) in suggestions.enumerated() {
-                let imageCount = suggestion.searchResults?.count ?? 0
-                print("  \(index + 1). \(suggestion.item) - Has \(imageCount) images")
-                if imageCount > 0 {
-                    print("       First image: \(suggestion.searchResults?.first?.imageUrl.prefix(50) ?? "N/A")...")
-                }
-            }
+            .padding(.bottom, 100) // Space for FAB
         }
     }
 }
 
-// MARK: - Suggestion Card
+// MARK: - Suggestion Card with Lazy Loading
 struct SuggestionCard: View {
     let suggestion: FashionSuggestion
     let isSearchingImages: Bool
     let onImageTap: (String) -> Void
-    @State private var loadedImages: Set<String> = []
+    @State private var visibleImageIndices: Set<Int> = []
     @EnvironmentObject var localizationManager: LocalizationManager
     
     var body: some View {
@@ -374,17 +371,15 @@ struct SuggestionCard: View {
             // Search Results
             if let results = suggestion.searchResults, !results.isEmpty {
                 ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: ModernTheme.Spacing.sm) {
-                        ForEach(results.prefix(5)) { result in // Limit to 5 images for performance
+                    LazyHStack(spacing: ModernTheme.Spacing.sm) {
+                        ForEach(Array(results.prefix(5).enumerated()), id: \.offset) { index, result in
                             SearchResultImage(
                                 result: result,
-                                isLoaded: loadedImages.contains(result.imageUrl),
-                                onTap: {
-                                    print("🖼️ Image tapped: \(result.imageUrl)")
-                                    onImageTap(result.imageUrl)
-                                },
-                                onLoad: { loadedImages.insert(result.imageUrl) }
+                                isVisible: visibleImageIndices.contains(index),
+                                onTap: { onImageTap(result.imageUrl) }
                             )
+                            .onAppear { visibleImageIndices.insert(index) }
+                            .onDisappear { visibleImageIndices.remove(index) }
                         }
                     }
                     .padding(.horizontal, ModernTheme.Spacing.xs)
@@ -439,78 +434,57 @@ struct SuggestionCard: View {
                     y: ModernTheme.Shadow.small.y
                 )
         )
-        .onAppear {
-            print("🃏 SuggestionCard appeared for: \(suggestion.item)")
-            print("   Search results count: \(suggestion.searchResults?.count ?? 0)")
-        }
     }
 }
 
-// MARK: - Search Result Image
+// MARK: - Search Result Image with Lazy Loading
 struct SearchResultImage: View {
     let result: SearchResult
-    let isLoaded: Bool
+    let isVisible: Bool
     let onTap: () -> Void
-    let onLoad: () -> Void
     
     var body: some View {
-        AsyncImage(url: URL(string: result.thumbnailUrl ?? result.imageUrl)) { phase in
-            switch phase {
-            case .empty:
+        Group {
+            if isVisible {
+                AsyncImage(url: URL(string: result.thumbnailUrl ?? result.imageUrl)) { phase in
+                    switch phase {
+                    case .empty:
+                        RoundedRectangle(cornerRadius: ModernTheme.CornerRadius.medium)
+                            .fill(ModernTheme.lightSage)
+                            .frame(width: 120, height: 120)
+                            .overlay(
+                                ProgressView()
+                                    .tint(ModernTheme.primary)
+                            )
+                    case .success(let image):
+                        image
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: 120, height: 120)
+                            .clipShape(RoundedRectangle(cornerRadius: ModernTheme.CornerRadius.medium))
+                    case .failure:
+                        RoundedRectangle(cornerRadius: ModernTheme.CornerRadius.medium)
+                            .fill(ModernTheme.lightSage)
+                            .frame(width: 120, height: 120)
+                            .overlay(
+                                VStack {
+                                    Image(systemName: "photo")
+                                        .foregroundColor(ModernTheme.textTertiary)
+                                    Text(localized(.failed))
+                                        .font(.caption2)
+                                        .foregroundColor(ModernTheme.textTertiary)
+                                }
+                            )
+                    @unknown default:
+                        EmptyView()
+                    }
+                }
+            } else {
                 RoundedRectangle(cornerRadius: ModernTheme.CornerRadius.medium)
                     .fill(ModernTheme.lightSage)
                     .frame(width: 120, height: 120)
-                    .overlay(
-                        ProgressView()
-                            .tint(ModernTheme.primary)
-                    )
-            case .success(let image):
-                image
-                    .resizable()
-                    .scaledToFill()
-                    .frame(width: 120, height: 120)
-                    .clipShape(RoundedRectangle(cornerRadius: ModernTheme.CornerRadius.medium))
-                    .onAppear {
-                        print("✅ Image loaded successfully: \(result.imageUrl.prefix(50))...")
-                        onLoad()
-                    }
-            case .failure(let error):
-                RoundedRectangle(cornerRadius: ModernTheme.CornerRadius.medium)
-                    .fill(ModernTheme.lightSage)
-                    .frame(width: 120, height: 120)
-                    .overlay(
-                        VStack {
-                            Image(systemName: "photo")
-                                .foregroundColor(ModernTheme.textTertiary)
-                            Text(localized(.failed))
-                                .font(.caption2)
-                                .foregroundColor(ModernTheme.textTertiary)
-                        }
-                    )
-                    .onAppear {
-                        print("❌ Image failed to load: \(error.localizedDescription)")
-                        print("   URL: \(result.imageUrl)")
-                    }
-            @unknown default:
-                EmptyView()
             }
         }
-        .overlay(
-            VStack {
-                Spacer()
-                if !result.title.isEmpty {
-                    Text(result.title)
-                        .font(ModernTheme.Typography.caption2)
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 4)
-                        .padding(.vertical, 2)
-                        .background(Color.black.opacity(0.7))
-                        .cornerRadius(4)
-                        .lineLimit(2)
-                        .padding(4)
-                }
-            }
-        )
         .onTapGesture(perform: onTap)
     }
 }

@@ -21,19 +21,28 @@ final class ImageCaptureViewModel: ObservableObject {
     @Published var selectedOccasion: Occasion?   // selected occasion
     @Published var customOccasion: String = ""   // custom occasion text
     
-    // Processing states
-    @Published var isBusy: Bool = false          // true while calling the API
-    @Published var isSearchingImages = false     // true while searching images
+    // Processing state
+    enum ProcessingState {
+        case idle
+        case analyzing
+        case searchingImages
+        case complete
+    }
+    @Published var processingState: ProcessingState = .idle
     
     // Results
     @Published var fashionAnalysis: FashionAnalysis? // structured analysis result
-    @Published var caption: String = ""          // Legacy: simple text output
     @Published var audioURL: URL?                // local MP3 file path
     
     // UI states
     @Published var error: String?                // non-nil on failure
     @Published var showPurchaseView: Bool = false // show purchase view when no credits
-    @Published var showResults: Bool = false     // show results view
+    
+    // Computed properties for backwards compatibility
+    var isBusy: Bool { processingState == .analyzing }
+    var isSearchingImages: Bool { processingState == .searchingImages }
+    var showResults: Bool { processingState == .complete && fashionAnalysis != nil }
+    var caption: String { fashionAnalysis?.overallComment ?? "" }
     
     /// Separate helper that actually plays the MP3.
     let audio = AudioPlayerManager()
@@ -105,12 +114,10 @@ final class ImageCaptureViewModel: ObservableObject {
         Task {
             do {
                 // Reset states
-                isBusy = true
+                processingState = .analyzing
                 fashionAnalysis = nil
-                caption = ""
                 audioURL = nil
                 error = nil
-                showResults = false
                 
                 // 1️⃣ Get fashion analysis
                 print("📤 Calling API for fashion analysis...")
@@ -130,9 +137,6 @@ final class ImageCaptureViewModel: ObservableObject {
                 
                 fashionAnalysis = analysis
                 
-                // Set caption for backward compatibility
-                caption = analysis.overallComment
-                
                 // 2️⃣ Generate TTS for the overall comment
                 let localizationManager = LocalizationManager.shared
                 let localizedOccasion = occasionText // This is already localized for display
@@ -151,20 +155,27 @@ final class ImageCaptureViewModel: ObservableObject {
                 
                 // Show results
                 withAnimation {
-                    showResults = true
-                    isBusy = false
+                    processingState = .complete
                 }
                 
-                // 3️⃣ Search for suggested items (don't block UI)
-                await searchForSuggestions(analysis.suggestions)
+                // 3️⃣ Search for suggested items sequentially (don't block UI)
+                Task {
+                    await searchForSuggestions(analysis.suggestions)
+                }
                 
             } catch {
-                // Surface any error to UI
-                self.error = error.localizedDescription
+                // Surface user-friendly error to UI
+                if let apiError = error as? APIServiceError {
+                    self.error = apiError.errorDescription
+                } else {
+                    self.error = LocalizationManager.shared.currentLanguage == .turkish ?
+                        "Bir hata oluştu. Lütfen tekrar deneyin." :
+                        "An error occurred. Please try again."
+                }
                 
                 // Refund the credit on error
                 creditsManager.addCredits(1)
-                isBusy = false
+                processingState = .idle
             }
         }
     }
@@ -173,18 +184,18 @@ final class ImageCaptureViewModel: ObservableObject {
     
     private func searchForSuggestions(_ suggestions: [FashionSuggestion]) async {
         print("🔎 Starting image search for \(suggestions.count) suggestions")
-        isSearchingImages = true
+        processingState = .searchingImages
         
         let currentLanguage = LocalizationManager.shared.currentLanguage
         
-        // Update each suggestion with search results
+        // Update each suggestion with search results sequentially
         for (index, suggestion) in suggestions.enumerated() {
             print("🔍 Searching for suggestion \(index + 1): \(suggestion.item) - Query: '\(suggestion.searchQuery)'")
             
             do {
                 let results = try await SerpAPIService.searchImages(
                     query: suggestion.searchQuery,
-                    count: 5,
+                    count: ConfigurationManager.maxImagesPerSuggestion,
                     language: currentLanguage
                 )
                 
@@ -208,69 +219,40 @@ final class ImageCaptureViewModel: ObservableObject {
                     
                     print("✅ Updated fashionAnalysis with new search results")
                 }
+                
+                // Small delay between searches to avoid rate limiting
+                if index < suggestions.count - 1 {
+                    try await Task.sleep(nanoseconds: 200_000_000) // 0.2 seconds
+                }
             } catch {
+                // Log error but don't show to user (non-critical feature)
                 print("❌ Failed to search for \(suggestion.item): \(error)")
+                
+                // If it's a critical error like invalid API key, we might want to track it
+                if let serpError = error as? SerpAPIError {
+                    switch serpError {
+                    case .invalidAPIKey, .quotaExceeded:
+                        // These are critical - maybe set a flag to show warning
+                        print("⚠️ Critical SerpAPI error: \(serpError.errorDescription ?? "")")
+                    default:
+                        break
+                    }
+                }
             }
         }
         
-        isSearchingImages = false
+        processingState = .complete
         print("🔎 Completed all image searches")
-    }
-    
-    // MARK: - Legacy support for simple caption generation --------------------
-    
-    /// Original simple caption generation (kept for backward compatibility)
-    func generate(voice: String? = nil, instructions: String? = nil) {
-        guard let image = selectedImage else { return }
-        
-        // Check credits first
-        guard creditsManager.useCredit() else {
-            showPurchaseView = true
-            error = LocalizationManager.shared.string(for: .noCreditsRemaining)
-            return
-        }
-        
-        Task {
-            do {
-                // Reset & show spinner
-                isBusy   = true
-                caption  = ""
-                audioURL = nil
-                error    = nil
-                
-                // 1️⃣  Vision
-                let text = try await APIService.generateCaption(for: image)
-                caption = text   // update UI immediately
-                
-                // 2️⃣  TTS
-                let url = try await APIService.textToSpeech(
-                    text,
-                    voice: voice,
-                    instructions: instructions
-                )
-                audioURL = url
-                try audio.load(fileURL: url)
-                
-            } catch {
-                // Surface any error to UI
-                self.error = error.localizedDescription
-                
-                // Refund the credit on error
-                creditsManager.addCredits(1)
-            }
-            isBusy = false
-        }
     }
     
     // MARK: - Convenience helpers --------------------------------------------
     
     /// Clears everything except the selected photo.
     func resetOutputs() {
-        caption  = ""
         audioURL = nil
         error    = nil
         fashionAnalysis = nil
-        showResults = false
+        processingState = .idle
         audio.pause()
     }
     

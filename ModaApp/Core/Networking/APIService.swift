@@ -14,15 +14,41 @@ enum APIServiceError: Error, LocalizedError {
     case imageEncodingFailed
     case unexpectedResponse
     case http(status: Int, body: String)
+    case invalidAPIKey
+    case networkError(String)
+    case jsonParsingError(String)
+    case quotaExceeded
 
     var errorDescription: String? {
         switch self {
         case .imageEncodingFailed:
-            return "Failed to encode image data."
+            return LocalizationManager.shared.currentLanguage == .turkish ?
+                "Görüntü kodlaması başarısız oldu." :
+                "Failed to encode image data."
         case .unexpectedResponse:
-            return "Unexpected response format from the server."
-        case .http(let status, let body):
-            return "HTTP \(status): \(body)"
+            return LocalizationManager.shared.currentLanguage == .turkish ?
+                "Sunucudan beklenmeyen yanıt formatı." :
+                "Unexpected response format from the server."
+        case .http(let status, _):
+            return LocalizationManager.shared.currentLanguage == .turkish ?
+                "Sunucu hatası (kod: \(status))" :
+                "Server error (code: \(status))"
+        case .invalidAPIKey:
+            return LocalizationManager.shared.currentLanguage == .turkish ?
+                "API anahtarı geçersiz. Lütfen ayarları kontrol edin." :
+                "Invalid API key. Please check your settings."
+        case .networkError(let message):
+            return LocalizationManager.shared.currentLanguage == .turkish ?
+                "Ağ hatası: \(message)" :
+                "Network error: \(message)"
+        case .jsonParsingError:
+            return LocalizationManager.shared.currentLanguage == .turkish ?
+                "Veri işleme hatası." :
+                "Failed to process response data."
+        case .quotaExceeded:
+            return LocalizationManager.shared.currentLanguage == .turkish ?
+                "API kullanım limiti aşıldı. Lütfen daha sonra tekrar deneyin." :
+                "API quota exceeded. Please try again later."
         }
     }
 }
@@ -35,6 +61,11 @@ struct APIService {
     
     /// Analyzes outfit for a specific occasion and returns structured data
     static func analyzeFashion(for image: UIImage, occasion: String, language: Language = LocalizationManager.shared.currentLanguage) async throws -> FashionAnalysis {
+        // Check for demo keys
+        if SecretsManager.isUsingDemoKeys {
+            throw APIServiceError.invalidAPIKey
+        }
+        
         let base64 = try await resizeAndEncode(image,
                                                maxEdge: ConfigurationManager.maxImageSize,
                                                quality: ConfigurationManager.imageQuality)
@@ -62,12 +93,12 @@ struct APIService {
         let body: [String: Any] = [
             "model": ConfigurationManager.visionModel,
             "messages": messages,
-            "max_tokens": 1500,  // More tokens for detailed JSON
-            "temperature": 0.3   // Lower temperature for consistent JSON
+            "max_tokens": ConfigurationManager.maxAnalysisTokens,
+            "temperature": ConfigurationManager.analysisTemperature
         ]
         
         let data = try await postJSON(
-            to: "https://api.openai.com/v1/chat/completions",
+            to: ConfigurationManager.openAIChatEndpoint,
             payload: body
         )
         
@@ -80,7 +111,7 @@ struct APIService {
         // Convert to FashionAnalysis object
         guard let jsonData = jsonString.data(using: .utf8) else {
             print("❌ Failed to convert string to data")
-            throw APIServiceError.unexpectedResponse
+            throw APIServiceError.jsonParsingError("Failed to convert response to data")
         }
         
         do {
@@ -104,7 +135,7 @@ struct APIService {
                 }
             }
             print("📝 Raw JSON: \(jsonString)")
-            throw APIServiceError.unexpectedResponse
+            throw APIServiceError.jsonParsingError("Invalid response format")
         }
     }
     
@@ -112,6 +143,11 @@ struct APIService {
     
     /// Sends the outfit photo to GPT-4o Vision and returns the stylist comment.
     static func generateCaption(for image: UIImage, language: Language = LocalizationManager.shared.currentLanguage) async throws -> String {
+        // Check for demo keys
+        if SecretsManager.isUsingDemoKeys {
+            throw APIServiceError.invalidAPIKey
+        }
+        
         let base64 = try await resizeAndEncode(image,
                                                maxEdge: ConfigurationManager.maxImageSize,
                                                quality: ConfigurationManager.imageQuality)
@@ -144,7 +180,7 @@ struct APIService {
         ]
         
         let data = try await postJSON(
-            to: "https://api.openai.com/v1/chat/completions",
+            to: ConfigurationManager.openAIChatEndpoint,
             payload: body
         )
         return try parseChatResponse(data)
@@ -156,6 +192,11 @@ struct APIService {
                              voice: String? = nil,
                              instructions: String? = nil,
                              language: Language = LocalizationManager.shared.currentLanguage) async throws -> URL {
+        // Check for demo keys
+        if SecretsManager.isUsingDemoKeys {
+            throw APIServiceError.invalidAPIKey
+        }
+        
         let body: [String: Any] = [
             "model": ConfigurationManager.ttsModel,
             "voice": voice ?? ConfigurationManager.defaultVoice,
@@ -166,7 +207,7 @@ struct APIService {
         ]
 
         let data = try await postJSON(
-            to: "https://api.openai.com/v1/audio/speech",
+            to: ConfigurationManager.openAISpeechEndpoint,
             payload: body
         )
 
@@ -207,15 +248,31 @@ struct APIService {
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
         req.httpBody = try JSONSerialization.data(withJSONObject: payload)
 
-        let (data, resp) = try await URLSession.shared.data(for: req)
-        guard let http = resp as? HTTPURLResponse, 200..<300 ~= http.statusCode else {
-            let body = String(data: data, encoding: .utf8) ?? "-"
-            throw APIServiceError.http(
-                status: (resp as? HTTPURLResponse)?.statusCode ?? -1,
-                body: body
-            )
+        do {
+            let (data, resp) = try await URLSession.shared.data(for: req)
+            
+            guard let http = resp as? HTTPURLResponse else {
+                throw APIServiceError.networkError("Invalid response type")
+            }
+            
+            // Handle specific error codes
+            switch http.statusCode {
+            case 200..<300:
+                return data
+            case 401:
+                throw APIServiceError.invalidAPIKey
+            case 429:
+                throw APIServiceError.quotaExceeded
+            default:
+                let body = String(data: data, encoding: .utf8) ?? "-"
+                throw APIServiceError.http(status: http.statusCode, body: body)
+            }
+        } catch {
+            if error is APIServiceError {
+                throw error
+            }
+            throw APIServiceError.networkError(error.localizedDescription)
         }
-        return data
     }
 
     private static func parseChatResponse(_ data: Data) throws -> String {

@@ -12,7 +12,6 @@ struct HomeView: View {
     @EnvironmentObject var localizationManager: LocalizationManager
     @State private var selectedFeature: AppFeature?
     @State private var animateElements = false
-    @State private var showLanguageMenu = false
     
     var body: some View {
         NavigationStack {
@@ -76,22 +75,17 @@ struct HomeView: View {
                                 .padding(.horizontal)
                                 .opacity(animateElements ? 1 : 0)
                         }
-                        .padding(.bottom, ModernTheme.Spacing.xxl + 60) // Extra space for language button
-                    }
-                }
-                
-                // Language Selector (Bottom Right)
-                VStack {
-                    Spacer()
-                    HStack {
-                        Spacer()
-                        LanguageSelector(showMenu: $showLanguageMenu)
-                            .padding(.horizontal)
-                            .padding(.bottom, ModernTheme.Spacing.lg)
+                        .padding(.bottom, ModernTheme.Spacing.xxl)
                     }
                 }
             }
-            .navigationBarHidden(true)
+            .navigationTitle(localized(.appName))
+            .navigationBarTitleDisplayMode(.large)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    LanguageButton()
+                }
+            }
             .fullScreenCover(item: $selectedFeature) { feature in
                 switch feature {
                 case .modaAnalyzer:
@@ -108,135 +102,13 @@ struct HomeView: View {
     }
 }
 
-// MARK: - Language Selector
-struct LanguageSelector: View {
-    @EnvironmentObject var localizationManager: LocalizationManager
-    @Binding var showMenu: Bool
-    @State private var animateFlag = false
-    
-    var body: some View {
-        ZStack(alignment: .bottomTrailing) {
-            // Language Options (shown when menu is open)
-            if showMenu {
-                VStack(alignment: .trailing, spacing: ModernTheme.Spacing.xs) {
-                    ForEach(Language.allCases, id: \.self) { language in
-                        LanguageOption(
-                            language: language,
-                            isSelected: localizationManager.currentLanguage == language,
-                            action: {
-                                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                                    localizationManager.switchLanguage(to: language)
-                                    showMenu = false
-                                }
-                            }
-                        )
-                        .transition(.asymmetric(
-                            insertion: .scale.combined(with: .opacity),
-                            removal: .scale.combined(with: .opacity)
-                        ))
-                    }
-                }
-                .padding(.bottom, 70) // Space for main button
-            }
-            
-            // Main Language Button
-            Button {
-                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                    showMenu.toggle()
-                }
-            } label: {
-                HStack(spacing: ModernTheme.Spacing.xs) {
-                    Image(systemName: "globe")
-                        .font(.system(size: 20, weight: .medium))
-                        .foregroundColor(ModernTheme.primary)
-                        .rotationEffect(.degrees(animateFlag ? 360 : 0))
-                    
-                    Text(localizationManager.currentLanguage.displayName)
-                        .font(ModernTheme.Typography.body)
-                        .fontWeight(.medium)
-                        .foregroundColor(ModernTheme.textPrimary)
-                }
-                .padding(.horizontal, ModernTheme.Spacing.md)
-                .padding(.vertical, ModernTheme.Spacing.sm)
-                .background(
-                    Capsule()
-                        .fill(ModernTheme.surface)
-                        .shadow(
-                            color: ModernTheme.primary.opacity(0.15),
-                            radius: 8,
-                            x: 0,
-                            y: 4
-                        )
-                )
-                .overlay(
-                    Capsule()
-                        .stroke(ModernTheme.primary.opacity(0.2), lineWidth: 1)
-                )
-                .scaleEffect(showMenu ? 1.05 : 1.0)
-            }
-            .onAppear {
-                withAnimation(.linear(duration: 1).delay(1)) {
-                    animateFlag = true
-                }
-            }
-        }
-    }
-}
-
-// MARK: - Language Option
-struct LanguageOption: View {
-    let language: Language
-    let isSelected: Bool
-    let action: () -> Void
-    
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: ModernTheme.Spacing.sm) {
-                Text(language.displayName)
-                    .font(ModernTheme.Typography.body)
-                    .fontWeight(isSelected ? .semibold : .regular)
-                    .foregroundColor(isSelected ? ModernTheme.primary : ModernTheme.textPrimary)
-                
-                if isSelected {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 16))
-                        .foregroundColor(ModernTheme.primary)
-                }
-            }
-            .padding(.horizontal, ModernTheme.Spacing.md)
-            .padding(.vertical, ModernTheme.Spacing.xs)
-            .background(
-                Capsule()
-                    .fill(isSelected ? ModernTheme.primary.opacity(0.1) : ModernTheme.surface)
-                    .shadow(
-                        color: ModernTheme.Shadow.small.color,
-                        radius: ModernTheme.Shadow.small.radius,
-                        x: 0,
-                        y: ModernTheme.Shadow.small.y
-                    )
-            )
-        }
-    }
-}
-
-// MARK: - Top Bar View
+// MARK: - Top Bar View (Updated without logo/app name)
 struct TopBarView: View {
     @EnvironmentObject var localizationManager: LocalizationManager
     let credits: Int
     
     var body: some View {
         HStack {
-            // Logo and App Name
-            HStack(spacing: ModernTheme.Spacing.xs) {
-                Image(systemName: "leaf.fill")
-                    .font(.system(size: 24))
-                    .foregroundColor(ModernTheme.primary)
-                
-                Text(localized(.appName))
-                    .font(ModernTheme.Typography.headline)
-                    .foregroundColor(ModernTheme.textPrimary)
-            }
-            
             Spacer()
             
             // Credits Display

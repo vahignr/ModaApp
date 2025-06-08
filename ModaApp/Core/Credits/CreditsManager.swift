@@ -11,9 +11,9 @@ final class CreditsManager: ObservableObject {
     private let hasLaunchedKey = "hasLaunchedBefore"
     private let freeCreditsKey = "freeCreditsGiven"
     
-    // Configuration
-    private let initialFreeCredits = 3  // New users get 3 free credits
-    private let creditCost = 1          // Each analysis costs 1 credit
+    // Configuration - using values from ConfigurationManager directly
+    private let initialFreeCredits = ConfigurationManager.initialFreeCredits
+    private let creditCost = ConfigurationManager.creditCostPerAnalysis
     
     private init() {
         // Check if this is first launch

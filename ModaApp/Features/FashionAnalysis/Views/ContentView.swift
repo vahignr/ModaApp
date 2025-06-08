@@ -33,13 +33,10 @@ struct ContentView: View {
                 ScrollView {
                     VStack(spacing: ModernTheme.Spacing.lg) {
                         
-                        // ── Credits Display ────────────────────────────────
-                        CreditsHeaderView(credits: creditsManager.remainingCredits)
-                            .padding(.horizontal)
-                        
                         // ── Step Indicator ─────────────────────────────────
                         StepIndicator(currentStep: currentStep)
                             .padding(.horizontal)
+                            .padding(.top, ModernTheme.Spacing.md)
                         
                         // ── Main Content Based on Step ─────────────────────
                         Group {
@@ -73,17 +70,6 @@ struct ContentView: View {
                         .padding(.bottom, ModernTheme.Spacing.xxl)
                     }
                 }
-                
-                // Language Button (Top Right)
-                VStack {
-                    HStack {
-                        Spacer()
-                        LanguageButton()
-                            .padding(.horizontal)
-                            .padding(.top, 60) // Below navigation bar
-                    }
-                    Spacer()
-                }
             }
             .navigationTitle(localized(.modaAnalyzer))
             .navigationBarTitleDisplayMode(.large)
@@ -101,19 +87,27 @@ struct ContentView: View {
                         .foregroundColor(ModernTheme.primary)
                     }
                 }
-            }
-        }
-        .onChange(of: vm.showResults) { _, newValue in
-            if newValue {
-                withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
-                    currentStep = .results
+                
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    LanguageButton()
                 }
             }
         }
-        .onChange(of: vm.isBusy) { _, isBusy in
-            if isBusy && currentStep == .selectOccasion {
-                withAnimation {
-                    currentStep = .analyzing
+        .onChange(of: vm.processingState) { _, newState in
+            switch newState {
+            case .idle:
+                break
+            case .analyzing:
+                if currentStep == .selectOccasion {
+                    withAnimation {
+                        currentStep = .analyzing
+                    }
+                }
+            case .searchingImages:
+                break
+            case .complete:
+                withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
+                    currentStep = .results
                 }
             }
         }
@@ -318,70 +312,6 @@ struct AnalyzingView: View {
                 .foregroundColor(ModernTheme.textSecondary)
         }
         .padding(.vertical, ModernTheme.Spacing.xxl)
-    }
-}
-
-// MARK: - Supporting Views (keeping your existing ones)
-struct CreditsHeaderView: View {
-    let credits: Int
-    @State private var isAnimating = false
-    
-    var body: some View {
-        HStack(spacing: ModernTheme.Spacing.md) {
-            // Credits icon and count
-            HStack(spacing: ModernTheme.Spacing.xs) {
-                Image(systemName: "leaf.circle.fill")
-                    .font(.system(size: 24))
-                    .foregroundColor(ModernTheme.secondary)
-                    .rotationEffect(.degrees(isAnimating ? 360 : 0))
-                    .animation(.linear(duration: 2).repeatForever(autoreverses: false), value: isAnimating)
-                
-                Text(LocalizationHelpers.formatNumber(credits))
-                    .font(ModernTheme.Typography.title2)
-                    .fontWeight(.bold)
-                    .foregroundColor(ModernTheme.textPrimary)
-                
-                Text(localized(.credits))
-                    .font(ModernTheme.Typography.body)
-                    .foregroundColor(ModernTheme.textSecondary)
-            }
-            
-            Spacer()
-            
-            // Buy more button
-            Button(action: {
-                // TODO: Navigate to purchase view
-                print("Show purchase options")
-            }) {
-                HStack(spacing: ModernTheme.Spacing.xs) {
-                    Image(systemName: "plus.circle.fill")
-                    Text(localized(.buy))
-                }
-                .font(ModernTheme.Typography.callout)
-                .fontWeight(.medium)
-                .foregroundColor(ModernTheme.primary)
-                .padding(.horizontal, ModernTheme.Spacing.md)
-                .padding(.vertical, ModernTheme.Spacing.xs)
-                .background(
-                    Capsule()
-                        .fill(ModernTheme.primary.opacity(0.15))
-                )
-            }
-        }
-        .padding(ModernTheme.Spacing.md)
-        .background(
-            RoundedRectangle(cornerRadius: ModernTheme.CornerRadius.large)
-                .fill(ModernTheme.surface)
-                .shadow(
-                    color: ModernTheme.Shadow.small.color,
-                    radius: ModernTheme.Shadow.small.radius,
-                    x: ModernTheme.Shadow.small.x,
-                    y: ModernTheme.Shadow.small.y
-                )
-        )
-        .onAppear {
-            isAnimating = true
-        }
     }
 }
 

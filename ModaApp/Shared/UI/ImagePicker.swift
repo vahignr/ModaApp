@@ -91,62 +91,6 @@ struct ImagePicker: View {
     }
 }
 
-// MARK: - Alternative Camera/Library Picker
-
-struct ImageSourcePicker: View {
-    @Binding var selectedImage: UIImage?
-    @State private var showingImagePicker = false
-    @State private var showingCamera = false
-    @State private var pickerItem: PhotosPickerItem?
-    @State private var showingActionSheet = false
-    
-    var body: some View {
-        Button(action: {
-            showingActionSheet = true
-        }) {
-            PrimaryButton(
-                title: selectedImage == nil ? LocalizationManager.shared.string(for: .selectPhoto) : LocalizationManager.shared.string(for: .changePhoto),
-                systemImage: "leaf.camera.fill",
-                style: .primary
-            )
-        }
-        .confirmationDialog(LocalizationManager.shared.string(for: .selectSource), isPresented: $showingActionSheet) {
-            Button(LocalizationManager.shared.string(for: .photoLibrary)) {
-                showingImagePicker = true
-            }
-            
-            Button(LocalizationManager.shared.string(for: .camera)) {
-                showingCamera = true
-            }
-            
-            Button(LocalizationManager.shared.string(for: .cancel), role: .cancel) { }
-        }
-        .sheet(isPresented: $showingImagePicker) {
-            PhotosPicker(
-                selection: $pickerItem,
-                matching: .images,
-                photoLibrary: .shared()
-            ) {
-                Text(LocalizationManager.shared.string(for: .selectFromLibrary))
-            }
-            .onChange(of: pickerItem) { _, _ in
-                Task {
-                    if let item = pickerItem,
-                       let data = try? await item.loadTransferable(type: Data.self),
-                       let image = UIImage(data: data) {
-                        await MainActor.run {
-                            selectedImage = image
-                            showingImagePicker = false
-                        }
-                    }
-                }
-            }
-        }
-        // Note: Camera functionality would require UIImagePickerController
-        // which needs additional implementation
-    }
-}
-
 // MARK: - Preview -------------------------------------------------------------
 
 #Preview {
@@ -159,9 +103,6 @@ struct ImageSourcePicker: View {
         
         // Custom title
         ImagePicker(selectedImage: .constant(nil), title: "Upload Outfit")
-        
-        // Alternative picker with source selection
-        ImageSourcePicker(selectedImage: .constant(nil))
     }
     .padding(ModernTheme.Spacing.xl)
     .background(ModernTheme.background)

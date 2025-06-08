@@ -148,9 +148,17 @@ struct AlertHelper {
     static func showErrorAlert(isPresented: Binding<Bool>, message: String, onRetry: (() -> Void)? = nil) -> Alert {
         let localizationManager = LocalizationManager.shared
         
-        if let onRetry = onRetry {
+        // Check if it's a specific error we want to handle differently
+        let isAPIKeyError = message.contains("API key") || message.contains("API anahtarı")
+        let isQuotaError = message.contains("quota") || message.contains("limit")
+        
+        let title = isAPIKeyError || isQuotaError ?
+            localizationManager.string(for: .warning) :
+            localizationManager.string(for: .error)
+        
+        if let onRetry = onRetry, !isAPIKeyError {
             return Alert(
-                title: Text(localizationManager.string(for: .error)),
+                title: Text(title),
                 message: Text(message),
                 primaryButton: .default(
                     Text(localizationManager.string(for: .tryAgain)),
@@ -162,7 +170,7 @@ struct AlertHelper {
             )
         } else {
             return Alert(
-                title: Text(localizationManager.string(for: .error)),
+                title: Text(title),
                 message: Text(message),
                 dismissButton: .default(
                     Text(localizationManager.string(for: .ok))
