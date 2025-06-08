@@ -36,25 +36,47 @@ struct HomeView: View {
                 .ignoresSafeArea()
                 
                 VStack(spacing: 0) {
-                    // Top Bar with Credits
-                    TopBarView(credits: creditsManager.remainingCredits)
-                        .padding(.horizontal)
-                        .padding(.top, 10)
-                    
                     ScrollView {
                         VStack(spacing: ModernTheme.Spacing.xl) {
-                            // App Branding
-                            BrandingSection()
-                                .padding(.top, ModernTheme.Spacing.lg)
+                            // Welcome Section
+                            WelcomeSection()
+                                .padding(.top, 80) // Space from top
                                 .opacity(animateElements ? 1 : 0)
                                 .offset(y: animateElements ? 0 : 20)
                             
-                            // Feature Section
+                            // Feature Section with Credits
                             VStack(alignment: .leading, spacing: ModernTheme.Spacing.lg) {
-                                Text(localized(.getStarted))
-                                    .font(ModernTheme.Typography.title2)
-                                    .foregroundColor(ModernTheme.textPrimary)
-                                    .padding(.horizontal)
+                                // Get Started and Credits Row
+                                HStack(alignment: .center) {
+                                    Text(localized(.getStarted))
+                                        .font(ModernTheme.Typography.title2)
+                                        .foregroundColor(ModernTheme.textPrimary)
+                                    
+                                    Spacer()
+                                    
+                                    // Credits Display
+                                    HStack(spacing: ModernTheme.Spacing.xs) {
+                                        Image(systemName: "leaf.circle.fill")
+                                            .font(.system(size: 20))
+                                            .foregroundColor(ModernTheme.primary)
+                                        
+                                        Text("\(LocalizationHelpers.formatNumber(creditsManager.remainingCredits))")
+                                            .font(ModernTheme.Typography.body)
+                                            .fontWeight(.semibold)
+                                            .foregroundColor(ModernTheme.textPrimary)
+                                        
+                                        Text(localized(.credits))
+                                            .font(ModernTheme.Typography.caption)
+                                            .foregroundColor(ModernTheme.textSecondary)
+                                    }
+                                    .padding(.horizontal, ModernTheme.Spacing.md)
+                                    .padding(.vertical, ModernTheme.Spacing.xs)
+                                    .background(
+                                        Capsule()
+                                            .fill(ModernTheme.lightSage)
+                                    )
+                                }
+                                .padding(.horizontal)
                                 
                                 // Feature Cards
                                 ForEach(AppFeature.allCases) { feature in
@@ -67,25 +89,41 @@ struct HomeView: View {
                                     .offset(y: animateElements ? 0 : 30)
                                 }
                             }
-                            .padding(.top, ModernTheme.Spacing.md)
+                            .padding(.top, ModernTheme.Spacing.lg)
                             
-                            // Additional Info Section
-                            InfoSection()
-                                .padding(.top, ModernTheme.Spacing.xxl)
-                                .padding(.horizontal)
-                                .opacity(animateElements ? 1 : 0)
+                            // Footer
+                            VStack(spacing: ModernTheme.Spacing.xs) {
+                                HStack(spacing: 4) {
+                                    ForEach(0..<3) { _ in
+                                        Circle()
+                                            .fill(ModernTheme.tertiary)
+                                            .frame(width: 4, height: 4)
+                                    }
+                                }
+                                
+                                Text(localized(.madeWithLove))
+                                    .font(ModernTheme.Typography.caption)
+                                    .foregroundColor(ModernTheme.textTertiary)
+                            }
+                            .padding(.top, ModernTheme.Spacing.xxl)
+                            .padding(.bottom, ModernTheme.Spacing.xxl)
                         }
-                        .padding(.bottom, ModernTheme.Spacing.xxl)
+                        .padding(.bottom, 100) // Space for language button
+                    }
+                }
+                
+                // Language Button at Bottom Right
+                VStack {
+                    Spacer()
+                    HStack {
+                        Spacer()
+                        LanguageButton()
+                            .padding(.trailing, ModernTheme.Spacing.lg)
+                            .padding(.bottom, ModernTheme.Spacing.xl)
                     }
                 }
             }
-            .navigationTitle(localized(.appName))
-            .navigationBarTitleDisplayMode(.large)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    LanguageButton()
-                }
-            }
+            .navigationBarHidden(true) // Hide the navigation bar completely
             .fullScreenCover(item: $selectedFeature) { feature in
                 switch feature {
                 case .modaAnalyzer:
@@ -102,78 +140,34 @@ struct HomeView: View {
     }
 }
 
-// MARK: - Top Bar View (Updated without logo/app name)
-struct TopBarView: View {
+// MARK: - Welcome Section
+struct WelcomeSection: View {
     @EnvironmentObject var localizationManager: LocalizationManager
-    let credits: Int
-    
-    var body: some View {
-        HStack {
-            Spacer()
-            
-            // Credits Display
-            HStack(spacing: ModernTheme.Spacing.xs) {
-                Image(systemName: "leaf.circle.fill")
-                    .font(.system(size: 20))
-                    .foregroundColor(ModernTheme.primary)
-                
-                Text(LocalizationHelpers.formatNumber(credits))
-                    .font(ModernTheme.Typography.body)
-                    .fontWeight(.semibold)
-                    .foregroundColor(ModernTheme.textPrimary)
-                
-                Text(localized(.credits))
-                    .font(ModernTheme.Typography.caption)
-                    .foregroundColor(ModernTheme.textSecondary)
-            }
-            .padding(.horizontal, ModernTheme.Spacing.md)
-            .padding(.vertical, ModernTheme.Spacing.xs)
-            .background(
-                Capsule()
-                    .fill(ModernTheme.lightSage)
-            )
-        }
-        .padding(.vertical, ModernTheme.Spacing.sm)
-    }
-}
-
-// MARK: - Branding Section
-struct BrandingSection: View {
-    @EnvironmentObject var localizationManager: LocalizationManager
-    @State private var leafAnimation = false
     
     var body: some View {
         VStack(spacing: ModernTheme.Spacing.md) {
-            // Animated Icon
-            ZStack {
-                Circle()
-                    .fill(ModernTheme.lightSage)
-                    .frame(width: 80, height: 80)
-                
-                Circle()
-                    .fill(ModernTheme.tertiary.opacity(0.5))
-                    .frame(width: 80, height: 80)
-                    .scaleEffect(leafAnimation ? 1.2 : 1.0)
-                    .opacity(leafAnimation ? 0 : 0.3)
-                
+            // App Name with Icon
+            HStack(spacing: ModernTheme.Spacing.xs) {
                 Image(systemName: "leaf.fill")
-                    .font(.system(size: 40))
+                    .font(.system(size: 36))
                     .foregroundColor(ModernTheme.primary)
-                    .rotationEffect(.degrees(leafAnimation ? 10 : -10))
-            }
-            .onAppear {
-                withAnimation(.easeInOut(duration: 2).repeatForever(autoreverses: true)) {
-                    leafAnimation = true
-                }
+                
+                Text(localized(.appName))
+                    .font(.system(size: 36, weight: .bold, design: .rounded))
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [ModernTheme.primary, ModernTheme.secondary],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
             }
             
             // Welcome Text
             VStack(spacing: ModernTheme.Spacing.xs) {
-                HStack(spacing: 4) {
-                    Text(localized(.welcomeTo))
-                        .font(ModernTheme.Typography.title2)
-                        .foregroundColor(ModernTheme.textPrimary)
-                }
+                Text(localized(.welcomeTo))
+                    .font(ModernTheme.Typography.title2)
+                    .foregroundColor(ModernTheme.textPrimary)
                 
                 Text(localized(.sustainableStyleJourney))
                     .font(ModernTheme.Typography.title)
@@ -266,92 +260,6 @@ struct MinimalFeatureCard: View {
                 }
             },
             perform: {}
-        )
-    }
-}
-
-// MARK: - Info Section
-struct InfoSection: View {
-    var body: some View {
-        VStack(spacing: ModernTheme.Spacing.lg) {
-            // Features Grid
-            LazyVGrid(columns: [
-                GridItem(.flexible()),
-                GridItem(.flexible())
-            ], spacing: ModernTheme.Spacing.md) {
-                InfoCard(
-                    icon: "sparkles",
-                    titleKey: .aiAnalysis,
-                    descriptionKey: .aiAnalysisDesc
-                )
-                
-                InfoCard(
-                    icon: "leaf.arrow.circlepath",
-                    titleKey: .ecoFriendly,
-                    descriptionKey: .ecoFriendlyDesc
-                )
-                
-                InfoCard(
-                    icon: "heart.fill",
-                    titleKey: .personalized,
-                    descriptionKey: .personalizedDesc
-                )
-                
-                InfoCard(
-                    icon: "shield.fill",
-                    titleKey: .privateSecure,
-                    descriptionKey: .privateSecureDesc
-                )
-            }
-            
-            // Footer
-            VStack(spacing: ModernTheme.Spacing.xs) {
-                HStack(spacing: 4) {
-                    ForEach(0..<3) { _ in
-                        Circle()
-                            .fill(ModernTheme.tertiary)
-                            .frame(width: 4, height: 4)
-                    }
-                }
-                
-                Text(localized(.madeWithLove))
-                    .font(ModernTheme.Typography.caption)
-                    .foregroundColor(ModernTheme.textTertiary)
-            }
-            .padding(.top, ModernTheme.Spacing.lg)
-        }
-    }
-}
-
-// MARK: - Info Card
-struct InfoCard: View {
-    let icon: String
-    let titleKey: LocalizedStringKey
-    let descriptionKey: LocalizedStringKey
-    
-    var body: some View {
-        VStack(spacing: ModernTheme.Spacing.sm) {
-            Image(systemName: icon)
-                .font(.system(size: 24))
-                .foregroundColor(ModernTheme.primary)
-            
-            VStack(spacing: 4) {
-                Text(localized(titleKey))
-                    .font(ModernTheme.Typography.caption)
-                    .fontWeight(.semibold)
-                    .foregroundColor(ModernTheme.textPrimary)
-                
-                Text(localized(descriptionKey))
-                    .font(ModernTheme.Typography.caption2)
-                    .foregroundColor(ModernTheme.textSecondary)
-                    .multilineTextAlignment(.center)
-            }
-        }
-        .frame(maxWidth: .infinity)
-        .padding(ModernTheme.Spacing.md)
-        .background(
-            RoundedRectangle(cornerRadius: ModernTheme.CornerRadius.medium)
-                .fill(ModernTheme.lightSage.opacity(0.5))
         )
     }
 }

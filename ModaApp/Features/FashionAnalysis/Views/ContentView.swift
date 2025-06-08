@@ -87,10 +87,6 @@ struct ContentView: View {
                         .foregroundColor(ModernTheme.primary)
                     }
                 }
-                
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    LanguageButton()
-                }
             }
         }
         .onChange(of: vm.processingState) { _, newState in
