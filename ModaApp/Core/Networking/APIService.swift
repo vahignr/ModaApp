@@ -1,8 +1,12 @@
+// ModaApp/Core/Networking/APIService.swift
 //
 //  APIService.swift
 //  ModaApp
 //
-//  Updated to use ConfigurationManager and include Fashion Analysis with Tone
+//  Updated to improve robustness when parsing JSON returned by the
+//  Vision → chat endpoint. We now gracefully extract the first JSON
+//  object from the assistant’s reply, stripping any accidental prose
+//  or markdown fences so decoding never blows up & waste user credits.
 //
 
 import Foundation
@@ -106,7 +110,12 @@ struct APIService {
         )
         
         // Parse JSON response
-        let jsonString = try parseChatResponse(data)
+        let rawAssistantContent = try parseChatResponse(data)
+        
+        // Extract the first valid JSON object, ignoring any spurious text / fences
+        guard let jsonString = extractFirstJSONObject(from: rawAssistantContent) else {
+            throw APIServiceError.jsonParsingError("Assistant returned no valid JSON")
+        }
         
         print("🔍 API Response JSON:")
         print(jsonString.prefix(500))
@@ -137,7 +146,7 @@ struct APIService {
                     print("   Unknown decoding error")
                 }
             }
-            print("📝 Raw JSON: \(jsonString)")
+            print("📝 Raw assistant reply (trimmed): \(rawAssistantContent.prefix(300))")
             throw APIServiceError.jsonParsingError("Invalid response format")
         }
     }
@@ -289,5 +298,27 @@ struct APIService {
             throw APIServiceError.unexpectedResponse
         }
         return content.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+    
+    // MARK: - JSON extraction helper -----------------------------------------
+    
+    /// Attempts to pull out the **first** valid JSON object found in the
+    /// given string. This guards against the model accidentally wrapping the
+    /// JSON in markdown fences or adding extra prose.
+    private static func extractFirstJSONObject(from text: String) -> String? {
+        guard
+            let firstBrace = text.firstIndex(of: "{"),
+            let lastBrace  = text[lastBraceSearchStart(in: text)...].lastIndex(of: "}")
+        else { return nil }
+        
+        let jsonSlice = text[firstBrace...lastBrace]
+        return String(jsonSlice)
+    }
+    
+    /// Helper to start the backward search for the closing brace a little earlier,
+    /// making sure we don't pick up stray braces in trailing explanations.
+    private static func lastBraceSearchStart(in text: String) -> String.Index {
+        let distance = min( max(0, text.count - 2_000), text.count )
+        return text.index(text.startIndex, offsetBy: distance)
     }
 }
