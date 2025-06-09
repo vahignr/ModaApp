@@ -144,16 +144,14 @@ final class ImageCaptureViewModel: ObservableObject {
                 fashionAnalysis = analysis
                 
                 // 2️⃣ Generate TTS for the overall comment with tone-specific voice
-                let localizationManager = LocalizationManager.shared
-                let localizedOccasion = occasionText // This is already localized for display
                 let voice = ConfigurationManager.voiceForPersona(tone)
-                let voiceInstructions = ConfigurationManager.voiceInstructions(for: tone, language: localizationManager.currentLanguage)
+                let voiceInstructions = ConfigurationManager.voiceInstructions(for: tone, language: LocalizationManager.shared.currentLanguage)
                 
                 let url = try await APIService.textToSpeech(
                     analysis.overallComment,
                     voice: voice,
                     instructions: voiceInstructions,
-                    language: localizationManager.currentLanguage
+                    language: LocalizationManager.shared.currentLanguage
                 )
                 audioURL = url
                 try audio.load(fileURL: url)

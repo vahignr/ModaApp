@@ -89,7 +89,7 @@ struct ContentView: View {
                 }
             }
         }
-        .onChange(of: vm.processingState) { _, newState in
+        .onChange(of: vm.processingState) { newState in
             switch newState {
             case .idle:
                 break

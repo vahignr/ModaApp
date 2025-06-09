@@ -54,7 +54,7 @@ struct ImagePicker: View {
         }
         .disabled(isLoading)
         // Load the UIImage when the user picks something
-        .onChange(of: pickerItem) { _, _ in
+        .onChange(of: pickerItem) { _ in
             loadImage()
         }
     }
