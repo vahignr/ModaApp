@@ -3,7 +3,7 @@
 //  ModaApp
 //
 //  Created by Vahi Guner on 6/3/25.
-//  Updated to include fashion analysis and occasion selection
+//  Updated to include fashion analysis, occasion selection, and tone personas
 //
 
 import SwiftUI
@@ -20,6 +20,9 @@ final class ImageCaptureViewModel: ObservableObject {
     // Occasion selection - Default to "Casual Day Out"
     @Published var selectedOccasion: Occasion? = Occasion.presets.first   // Default to first occasion
     @Published var customOccasion: String = ""   // custom occasion text
+    
+    // Tone selection - Default to "Best Friend"
+    @Published var selectedTone: TonePersona? = TonePersona.defaultPersona
     
     // Processing state
     enum ProcessingState {
@@ -76,14 +79,16 @@ final class ImageCaptureViewModel: ObservableObject {
     
     var canAnalyze: Bool {
         selectedImage != nil && selectedOccasion != nil &&
-        (selectedOccasion?.name != "Custom" || !customOccasion.isEmpty)
+        (selectedOccasion?.name != "Custom" || !customOccasion.isEmpty) &&
+        selectedTone != nil
     }
     
     // MARK: - Primary workflow ------------------------------------------------
     
-    /// Enhanced analysis with occasion context
+    /// Enhanced analysis with occasion context and tone
     func analyzeOutfit() {
-        guard let image = selectedImage else { return }
+        guard let image = selectedImage,
+              let tone = selectedTone else { return }
         
         // Get the occasion text in English for API (API expects English)
         let occasionForAPI: String
@@ -119,11 +124,12 @@ final class ImageCaptureViewModel: ObservableObject {
                 audioURL = nil
                 error = nil
                 
-                // 1️⃣ Get fashion analysis
-                print("📤 Calling API for fashion analysis...")
+                // 1️⃣ Get fashion analysis with tone
+                print("📤 Calling API for fashion analysis with tone: \(tone.name)...")
                 let analysis = try await APIService.analyzeFashion(
                     for: image,
                     occasion: occasionForAPI,
+                    tone: tone,
                     language: LocalizationManager.shared.currentLanguage
                 )
                 
@@ -137,16 +143,15 @@ final class ImageCaptureViewModel: ObservableObject {
                 
                 fashionAnalysis = analysis
                 
-                // 2️⃣ Generate TTS for the overall comment
+                // 2️⃣ Generate TTS for the overall comment with tone-specific voice
                 let localizationManager = LocalizationManager.shared
                 let localizedOccasion = occasionText // This is already localized for display
-                let voiceInstructions = localizationManager.currentLanguage == .turkish ?
-                    "Etkinlik için kıyafet seçimlerini tartışan samimi bir moda danışmanı olarak konuş: \(localizedOccasion)" :
-                    "Speak as a friendly fashion advisor discussing outfit choices for \(localizedOccasion)"
+                let voice = ConfigurationManager.voiceForPersona(tone)
+                let voiceInstructions = ConfigurationManager.voiceInstructions(for: tone, language: localizationManager.currentLanguage)
                 
                 let url = try await APIService.textToSpeech(
                     analysis.overallComment,
-                    voice: ConfigurationManager.defaultVoice,
+                    voice: voice,
                     instructions: voiceInstructions,
                     language: localizationManager.currentLanguage
                 )
@@ -260,6 +265,7 @@ final class ImageCaptureViewModel: ObservableObject {
     func resetAll() {
         selectedImage = nil
         selectedOccasion = Occasion.presets.first  // Reset to default
+        selectedTone = TonePersona.defaultPersona   // Reset to default tone
         customOccasion = ""
         resetOutputs()
     }

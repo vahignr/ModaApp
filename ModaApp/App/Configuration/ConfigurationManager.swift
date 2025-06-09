@@ -9,10 +9,61 @@ struct ConfigurationManager {
     static let serpAPIBaseURL = "https://serpapi.com/search.json"
     
     // MARK: - Voice Settings
-    static let availableVoices = ["nova", "shimmer", "echo", "alloy", "fable"]
-    static let defaultVoice = "nova"
+    static let availableVoices = ["nova", "shimmer", "echo", "alloy", "fable", "sage"]
+    static let defaultVoice = "sage"
     
-    // Voice instructions based on language
+    // Voice by tone persona
+    static func voiceForPersona(_ persona: TonePersona) -> String {
+        switch persona.name {
+        case "Best Friend":
+            return "sage"
+        case "Fashion Police":
+            return "sage"
+        case "Style Expert":
+            return "sage"
+        case "Trendsetter":
+            return "sage"
+        case "Eco Warrior":
+            return "sage"
+        default:
+            return defaultVoice
+        }
+    }
+    
+    // Voice instructions based on tone and language
+    static func voiceInstructions(for persona: TonePersona, language: Language) -> String {
+        switch (persona.name, language) {
+        case ("Best Friend", .english):
+            return "Speak as a supportive best friend with warmth and enthusiasm. Be encouraging and use casual, friendly language."
+        case ("Best Friend", .turkish):
+            return "Destekleyici bir en iyi arkadaş gibi sıcak ve coşkulu konuş. Cesaretlendirici ol ve samimi, arkadaşça bir dil kullan."
+            
+        case ("Fashion Police", .english):
+            return "Speak as a direct fashion critic with sass and confidence. Be honest but not mean, witty and sharp."
+        case ("Fashion Police", .turkish):
+            return "Doğrudan bir moda eleştirmeni gibi özgüvenli ve keskin konuş. Dürüst ama kırıcı değil, zeki ve sivri dilli ol."
+            
+        case ("Style Expert", .english):
+            return "Speak as a professional fashion consultant with authority and expertise. Be informative and balanced."
+        case ("Style Expert", .turkish):
+            return "Profesyonel bir moda danışmanı gibi otorite ve uzmanlıkla konuş. Bilgilendirici ve dengeli ol."
+            
+        case ("Trendsetter", .english):
+            return "Speak as a bold fashion influencer with energy and inspiration. Be cutting-edge and motivational."
+        case ("Trendsetter", .turkish):
+            return "Cesur bir moda etkileyicisi gibi enerjik ve ilham verici konuş. Yenilikçi ve motive edici ol."
+            
+        case ("Eco Warrior", .english):
+            return "Speak as a passionate sustainability advocate with knowledge and care. Focus on eco-conscious choices."
+        case ("Eco Warrior", .turkish):
+            return "Tutkulu bir sürdürülebilirlik savunucusu gibi bilgili ve özenli konuş. Çevre dostu seçimlere odaklan."
+            
+        default:
+            return voiceInstructions(for: language)
+        }
+    }
+    
+    // Original voice instructions (fallback)
     static func voiceInstructions(for language: Language) -> String {
         switch language {
         case .english:
@@ -53,19 +104,58 @@ struct ConfigurationManager {
     static let loadingAnimationDuration: Double = 2.0
     static let toastDisplayDuration: Double = 3.0
     
-    // MARK: - Fashion Analysis Prompt (JSON Response)
-    static func fashionAnalysisPrompt(for occasion: String, language: Language) -> String {
+    // MARK: - Fashion Analysis Prompt with Tone (JSON Response)
+    static func fashionAnalysisPrompt(for occasion: String, tone: TonePersona, language: Language) -> String {
         switch language {
         case .english:
-            return englishFashionAnalysisPrompt(for: occasion)
+            return englishFashionAnalysisPrompt(for: occasion, tone: tone)
         case .turkish:
-            return turkishFashionAnalysisPrompt(for: occasion)
+            return turkishFashionAnalysisPrompt(for: occasion, tone: tone)
         }
     }
     
-    private static func englishFashionAnalysisPrompt(for occasion: String) -> String {
+    private static func toneInstructions(for tone: TonePersona, in language: Language) -> String {
+        switch (tone.name, language) {
+        case ("Best Friend", .english):
+            return "Write as a supportive best friend who wants them to feel amazing. Be warm, enthusiastic, and encouraging. Use casual language and exclamation points! Celebrate their style choices while gently suggesting improvements."
+            
+        case ("Fashion Police", .english):
+            return "Write as a sassy fashion critic who tells it like it is. Be direct, witty, and honest without being mean. Use fashion terminology and clever observations. Point out what works and what definitely doesn't."
+            
+        case ("Style Expert", .english):
+            return "Write as a professional fashion consultant with deep expertise. Be informative, balanced, and sophisticated. Use industry knowledge to explain why certain choices work or don't. Provide educated guidance."
+            
+        case ("Trendsetter", .english):
+            return "Write as a bold fashion influencer who pushes boundaries. Be inspiring, cutting-edge, and confident. Encourage taking risks and trying new trends. Focus on making a statement and standing out."
+            
+        case ("Eco Warrior", .english):
+            return "Write as a passionate sustainability advocate. Focus heavily on eco-friendly materials, ethical brands, and sustainable fashion choices. Praise conscious choices and suggest environmentally responsible alternatives."
+            
+        case ("Best Friend", .turkish):
+            return "Onların harika hissetmesini isteyen destekleyici bir en iyi arkadaş gibi yaz. Sıcak, coşkulu ve cesaretlendirici ol. Günlük dil kullan ve ünlem işaretleri ekle! Stil seçimlerini kutlarken nazikçe iyileştirmeler öner."
+            
+        case ("Fashion Police", .turkish):
+            return "Doğruları söyleyen sivri dilli bir moda eleştirmeni gibi yaz. Doğrudan, esprili ve dürüst ol ama kırıcı olma. Moda terminolojisi ve zekice gözlemler kullan. Neyin işe yaradığını ve kesinlikle yaramadığını belirt."
+            
+        case ("Style Expert", .turkish):
+            return "Derin uzmanlığa sahip profesyonel bir moda danışmanı gibi yaz. Bilgilendirici, dengeli ve sofistike ol. Belirli seçimlerin neden işe yaradığını veya yaramadığını açıklamak için sektör bilgisini kullan."
+            
+        case ("Trendsetter", .turkish):
+            return "Sınırları zorlayan cesur bir moda etkileyicisi gibi yaz. İlham verici, yenilikçi ve özgüvenli ol. Risk almayı ve yeni trendleri denemeyi teşvik et. Dikkat çekmeye ve öne çıkmaya odaklan."
+            
+        case ("Eco Warrior", .turkish):
+            return "Tutkulu bir sürdürülebilirlik savunucusu gibi yaz. Çevre dostu malzemelere, etik markalara ve sürdürülebilir moda seçimlerine yoğun odaklan. Bilinçli seçimleri öv ve çevreye duyarlı alternatifler öner."
+            
+        default:
+            return ""
+        }
+    }
+    
+    private static func englishFashionAnalysisPrompt(for occasion: String, tone: TonePersona) -> String {
         return """
         You are an expert fashion stylist analyzing an outfit for a specific occasion.
+        
+        Persona: \(tone.name) - \(toneInstructions(for: tone, in: .english))
         
         Occasion: \(occasion)
         
@@ -73,7 +163,7 @@ struct ConfigurationManager {
         
         You MUST return a valid JSON object with this EXACT structure (no markdown, just JSON):
         {
-          "overallComment": "A warm, friendly paragraph (100-150 words) about how well the outfit suits the occasion. Be specific about what works and what could be improved.",
+          "overallComment": "A paragraph (100-150 words) in the tone of \(tone.name) about how well the outfit suits the occasion. Be specific about what works and what could be improved, maintaining the persona throughout.",
           "currentItems": [
             {
               "category": "top",
@@ -102,18 +192,21 @@ struct ConfigurationManager {
         }
         
         Requirements:
+        - Maintain the \(tone.name) persona consistently in the overallComment
         - List ALL visible clothing items in currentItems array
         - Category must be one of: top/bottom/dress/shoes/outerwear/accessory/bag/jewelry/hat/sunglasses
-        - Provide EXACTLY 3 suggestions
+        - Provide EXACTLY 3 suggestions that align with the persona's values
         - Each suggestion must have: item (specific name), reason (why it helps for \(occasion)), searchQuery (3-5 words)
         - Make search queries specific and Google-friendly
         - Return ONLY valid JSON, no additional text or markdown
         """
     }
     
-    private static func turkishFashionAnalysisPrompt(for occasion: String) -> String {
+    private static func turkishFashionAnalysisPrompt(for occasion: String, tone: TonePersona) -> String {
         return """
         Belirli bir etkinlik için kıyafet analiz eden uzman bir moda stilistisiniz.
+        
+        Kişilik: \(tone.name) - \(toneInstructions(for: tone, in: .turkish))
         
         Etkinlik: \(occasion)
         
@@ -121,7 +214,7 @@ struct ConfigurationManager {
         
         SADECE geçerli JSON objesi döndürmelisiniz (markdown yok, sadece JSON):
         {
-          "overallComment": "Kıyafetin etkinliğe ne kadar uygun olduğu hakkında sıcak, samimi bir paragraf (100-150 kelime). Neyin işe yaradığı ve nelerin geliştirilebileceği konusunda spesifik olun.",
+          "overallComment": "\(tone.name) tonunda kıyafetin etkinliğe ne kadar uygun olduğu hakkında bir paragraf (100-150 kelime). Neyin işe yaradığı ve nelerin geliştirilebileceği konusunda spesifik olun, kişiliği koruyun.",
           "currentItems": [
             {
               "category": "top",
@@ -150,13 +243,20 @@ struct ConfigurationManager {
         }
         
         Gereksinimler:
+        - overallComment'te \(tone.name) kişiliğini tutarlı şekilde koruyun
         - currentItems dizisinde görünen TÜM giysi öğelerini listeleyin
         - Kategori şunlardan biri olmalı: top/bottom/dress/shoes/outerwear/accessory/bag/jewelry/hat/sunglasses
-        - TAM OLARAK 3 öneri verin
+        - Kişiliğin değerleriyle uyumlu TAM OLARAK 3 öneri verin
         - Her öneri şunları içermeli: item (spesifik isim), reason (\(occasion) için neden yardımcı olur), searchQuery (3-5 kelime)
         - Arama sorgularını spesifik ve Google dostu yapın
         - SADECE geçerli JSON döndürün, ek metin veya markdown yok
         """
+    }
+    
+    // MARK: - Fashion Analysis Prompt (Original - for backward compatibility)
+    static func fashionAnalysisPrompt(for occasion: String, language: Language) -> String {
+        // Default to Style Expert tone for backward compatibility
+        return fashionAnalysisPrompt(for: occasion, tone: TonePersona.personas[2], language: language)
     }
     
     // MARK: - Fashion Prompt (Original - for backward compatibility)

@@ -2,7 +2,7 @@
 //  APIService.swift
 //  ModaApp
 //
-//  Updated to use ConfigurationManager and include Fashion Analysis
+//  Updated to use ConfigurationManager and include Fashion Analysis with Tone
 //
 
 import Foundation
@@ -57,10 +57,10 @@ enum APIServiceError: Error, LocalizedError {
 
 struct APIService {
     
-    // MARK: - Fashion Analysis (JSON Response) --------------------------------
+    // MARK: - Fashion Analysis with Tone (JSON Response) --------------------------------
     
-    /// Analyzes outfit for a specific occasion and returns structured data
-    static func analyzeFashion(for image: UIImage, occasion: String, language: Language = LocalizationManager.shared.currentLanguage) async throws -> FashionAnalysis {
+    /// Analyzes outfit for a specific occasion with a specific tone and returns structured data
+    static func analyzeFashion(for image: UIImage, occasion: String, tone: TonePersona? = nil, language: Language = LocalizationManager.shared.currentLanguage) async throws -> FashionAnalysis {
         // Check for demo keys
         if SecretsManager.isUsingDemoKeys {
             throw APIServiceError.invalidAPIKey
@@ -70,11 +70,14 @@ struct APIService {
                                                maxEdge: ConfigurationManager.maxImageSize,
                                                quality: ConfigurationManager.imageQuality)
         
-        // Messages for fashion analysis
+        // Use provided tone or default to Style Expert
+        let selectedTone = tone ?? TonePersona.personas[2]
+        
+        // Messages for fashion analysis with tone
         let messages: [[String: Any]] = [
             [
                 "role": "system",
-                "content": ConfigurationManager.fashionAnalysisPrompt(for: occasion, language: language)
+                "content": ConfigurationManager.fashionAnalysisPrompt(for: occasion, tone: selectedTone, language: language)
             ],
             [
                 "role": "user",

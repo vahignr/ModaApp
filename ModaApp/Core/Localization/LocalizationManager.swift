@@ -131,6 +131,22 @@ enum LocalizedStringKey: String, CaseIterable {
     case occasionPlaceholder = "occasion_placeholder"
     case analyzeStyle = "analyze_style"
     
+    // Voice Tone Selection
+    case selectVoiceTone = "select_voice_tone"
+    case voiceToneDescription = "voice_tone_description"
+    
+    // Tone Personas
+    case toneBestFriend = "tone_best_friend"
+    case toneBestFriendDesc = "tone_best_friend_desc"
+    case toneFashionPolice = "tone_fashion_police"
+    case toneFashionPoliceDesc = "tone_fashion_police_desc"
+    case toneStyleExpert = "tone_style_expert"
+    case toneStyleExpertDesc = "tone_style_expert_desc"
+    case toneTrendsetter = "tone_trendsetter"
+    case toneTrendsetterDesc = "tone_trendsetter_desc"
+    case toneEcoWarrior = "tone_eco_warrior"
+    case toneEcoWarriorDesc = "tone_eco_warrior_desc"
+    
     // Occasions
     case casualDayOut = "casual_day_out"
     case workOffice = "work_office"

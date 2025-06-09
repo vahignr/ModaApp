@@ -2,7 +2,7 @@
 //  ContentView.swift
 //  ModaApp
 //
-//  Updated with Occasion Selection and Fashion Analysis
+//  Updated with Occasion Selection, Tone Selection, and Fashion Analysis
 //
 
 import SwiftUI
@@ -286,10 +286,11 @@ struct OccasionSelectionView: View {
             }
             .padding(.horizontal, ModernTheme.Spacing.lg)
             
-            // Occasion Selector
+            // Occasion and Tone Selector
             OccasionSelector(
                 selectedOccasion: $vm.selectedOccasion,
-                customOccasion: $vm.customOccasion
+                customOccasion: $vm.customOccasion,
+                selectedTone: $vm.selectedTone
             )
             .padding(.horizontal)
         }

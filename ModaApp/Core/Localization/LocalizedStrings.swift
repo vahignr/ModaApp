@@ -55,6 +55,22 @@ struct LocalizedStrings {
             .occasionPlaceholder: "e.g., Blues concert at outdoor venue",
             .analyzeStyle: "Analyze Style",
             
+            // Voice Tone Selection
+            .selectVoiceTone: "Choose Your Style Advisor",
+            .voiceToneDescription: "Select the personality for your fashion advice",
+            
+            // Tone Personas
+            .toneBestFriend: "Best Friend",
+            .toneBestFriendDesc: "Supportive and encouraging",
+            .toneFashionPolice: "Fashion Police",
+            .toneFashionPoliceDesc: "Direct and honest critique",
+            .toneStyleExpert: "Style Expert",
+            .toneStyleExpertDesc: "Professional guidance",
+            .toneTrendsetter: "Trendsetter",
+            .toneTrendsetterDesc: "Bold and inspiring",
+            .toneEcoWarrior: "Eco Warrior",
+            .toneEcoWarriorDesc: "Sustainability focused",
+            
             // Occasions
             .casualDayOut: "Casual Day Out",
             .workOffice: "Work/Office",
@@ -192,6 +208,22 @@ struct LocalizedStrings {
             .describeYourOccasion: "Etkinliğinizi açıklayın",
             .occasionPlaceholder: "örn., Açık havada blues konseri",
             .analyzeStyle: "Stili Analiz Et",
+            
+            // Voice Tone Selection
+            .selectVoiceTone: "Stil Danışmanınızı Seçin",
+            .voiceToneDescription: "Moda tavsiyeleriniz için kişiliği seçin",
+            
+            // Tone Personas
+            .toneBestFriend: "En İyi Arkadaş",
+            .toneBestFriendDesc: "Destekleyici ve cesaretlendirici",
+            .toneFashionPolice: "Moda Polisi",
+            .toneFashionPoliceDesc: "Doğrudan ve dürüst eleştiri",
+            .toneStyleExpert: "Stil Uzmanı",
+            .toneStyleExpertDesc: "Profesyonel rehberlik",
+            .toneTrendsetter: "Trend Belirleyici",
+            .toneTrendsetterDesc: "Cesur ve ilham verici",
+            .toneEcoWarrior: "Çevre Savaşçısı",
+            .toneEcoWarriorDesc: "Sürdürülebilirlik odaklı",
             
             // Occasions
             .casualDayOut: "Günlük Gezinti",

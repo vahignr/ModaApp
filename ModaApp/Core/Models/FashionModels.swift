@@ -1,5 +1,66 @@
+//
+//  FashionModels.swift
+//  ModaApp
+//
+//  Fashion analysis models including tone personas
+//
+
 import Foundation
 import SwiftUI
+
+// MARK: - Tone Persona Model
+struct TonePersona: Identifiable, Equatable {
+    let id = UUID()
+    let name: String
+    let icon: String
+    let description: String
+    let localizationKey: LocalizedStringKey
+    let descriptionKey: LocalizedStringKey
+    
+    static func == (lhs: TonePersona, rhs: TonePersona) -> Bool {
+        lhs.id == rhs.id
+    }
+    
+    static let personas = [
+        TonePersona(
+            name: "Best Friend",
+            icon: "heart.fill",
+            description: "Supportive and encouraging",
+            localizationKey: .toneBestFriend,
+            descriptionKey: .toneBestFriendDesc
+        ),
+        TonePersona(
+            name: "Fashion Police",
+            icon: "shield.fill",
+            description: "Direct and honest critique",
+            localizationKey: .toneFashionPolice,
+            descriptionKey: .toneFashionPoliceDesc
+        ),
+        TonePersona(
+            name: "Style Expert",
+            icon: "star.fill",
+            description: "Professional guidance",
+            localizationKey: .toneStyleExpert,
+            descriptionKey: .toneStyleExpertDesc
+        ),
+        TonePersona(
+            name: "Trendsetter",
+            icon: "sparkles",
+            description: "Bold and inspiring",
+            localizationKey: .toneTrendsetter,
+            descriptionKey: .toneTrendsetterDesc
+        ),
+        TonePersona(
+            name: "Eco Warrior",
+            icon: "leaf.fill",
+            description: "Sustainability focused",
+            localizationKey: .toneEcoWarrior,
+            descriptionKey: .toneEcoWarriorDesc
+        )
+    ]
+    
+    static let defaultPersona = personas.first!
+}
 
 // MARK: - Main Fashion Analysis Model
 struct FashionAnalysis: Codable {
