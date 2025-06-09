@@ -14,6 +14,7 @@ struct ContentView: View {
     @EnvironmentObject var localizationManager: LocalizationManager
     @State private var showCreditsAnimation = false
     @State private var currentStep: Step = .selectImage
+    @State private var showPurchaseView = false
     @Environment(\.dismiss) private var dismiss
     
     enum Step {
@@ -109,8 +110,7 @@ struct ContentView: View {
         }
         .alert(localized(.noCredits), isPresented: $vm.showPurchaseView) {
             Button(localized(.buyCredits)) {
-                // TODO: Navigate to purchase view
-                print("Navigate to purchase view")
+                showPurchaseView = true
             }
             Button(localized(.later), role: .cancel) { }
         } message: {
@@ -120,6 +120,10 @@ struct ContentView: View {
             Button(localized(.ok)) { vm.error = nil }
         } message: {
             Text(vm.error ?? "")
+        }
+        .fullScreenCover(isPresented: $showPurchaseView) {
+            PurchaseView()
+                .environmentObject(localizationManager)
         }
     }
 }
@@ -237,6 +241,9 @@ struct ImageSelectionView: View {
 struct OccasionSelectionView: View {
     @ObservedObject var vm: ImageCaptureViewModel
     @Binding var currentStep: ContentView.Step
+    @State private var showPurchaseView = false
+    @EnvironmentObject var creditsManager: CreditsManager
+    @EnvironmentObject var localizationManager: LocalizationManager  // Fixed: Added this line
     
     var body: some View {
         VStack(spacing: ModernTheme.Spacing.lg) {
@@ -256,6 +263,30 @@ struct OccasionSelectionView: View {
                 }
                 
                 Spacer()
+                
+                // Credits Display
+                Button {
+                    showPurchaseView = true
+                } label: {
+                    HStack(spacing: ModernTheme.Spacing.xs) {
+                        Image(systemName: "leaf.circle.fill")
+                            .font(.system(size: 18))
+                        Text("\(creditsManager.remainingCredits)")
+                            .font(ModernTheme.Typography.body)
+                            .fontWeight(.semibold)
+                        if creditsManager.remainingCredits == 0 {
+                            Image(systemName: "plus.circle.fill")
+                                .font(.system(size: 16))
+                        }
+                    }
+                    .foregroundColor(creditsManager.remainingCredits > 0 ? ModernTheme.primary : ModernTheme.error)
+                    .padding(.horizontal, ModernTheme.Spacing.sm)
+                    .padding(.vertical, ModernTheme.Spacing.xs)
+                    .background(
+                        Capsule()
+                            .fill(creditsManager.remainingCredits > 0 ? ModernTheme.lightSage : ModernTheme.error.opacity(0.1))
+                    )
+                }
                 
                 Button {
                     vm.analyzeOutfit()
@@ -293,6 +324,10 @@ struct OccasionSelectionView: View {
                 selectedTone: $vm.selectedTone
             )
             .padding(.horizontal)
+        }
+        .fullScreenCover(isPresented: $showPurchaseView) {
+            PurchaseView()
+                .environmentObject(localizationManager)
         }
     }
 }

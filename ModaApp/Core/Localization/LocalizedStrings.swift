@@ -133,6 +133,16 @@ struct LocalizedStrings {
             .creditsPackage: "Credits Package",
             .oneCredit: "1 Credit",
             .nCredits: "%d Credits",
+            .getMoreCredits: "Get More Credits",
+            .viewAllPackages: "View All Packages",
+            .mostPopular: "Most Popular",
+            .bestValue: "Best Value",
+            .instantDelivery: "Instant Delivery",
+            .securePayment: "Secure Payment",
+            .restorePurchases: "Restore Purchases",
+            .restoringPurchases: "Restoring Purchases",
+            .noPurchasesToRestore: "No purchases to restore",
+            .purchasesRestored: "Purchases Restored",
             
             // Errors
             .error: "Error",
@@ -287,6 +297,16 @@ struct LocalizedStrings {
             .creditsPackage: "Kredi Paketi",
             .oneCredit: "1 Kredi",
             .nCredits: "%d Kredi",
+            .getMoreCredits: "Daha Fazla Kredi Al",
+            .viewAllPackages: "Tüm Paketleri Gör",
+            .mostPopular: "En Popüler",
+            .bestValue: "En İyi Değer",
+            .instantDelivery: "Anında Teslimat",
+            .securePayment: "Güvenli Ödeme",
+            .restorePurchases: "Satın Almaları Geri Yükle",
+            .restoringPurchases: "Satın Almalar Geri Yükleniyor",
+            .noPurchasesToRestore: "Geri yüklenecek satın alma yok",
+            .purchasesRestored: "Satın Almalar Geri Yüklendi",
             
             // Errors
             .error: "Hata",

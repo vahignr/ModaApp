@@ -1,0 +1,96 @@
+{
+  "identifier": "com.vahiguner.ModaApp.Configuration",
+  "nonRenewableSubscriptions": [],
+  "products": [
+    {
+      "displayPrice": "0.99",
+      "familyShareable": false,
+      "internalID": "6738997397",
+      "localizations": [
+        {
+          "description": "Analyze 5 outfits",
+          "displayName": "5 Credits",
+          "locale": "en_US"
+        },
+        {
+          "description": "5 kıyafet analizi",
+          "displayName": "5 Kredi",
+          "locale": "tr"
+        }
+      ],
+      "productID": "com.vahiguner.ModaApp.credits_5",
+      "referenceName": "5 Credits",
+      "type": "Consumable"
+    },
+    {
+      "displayPrice": "1.99",
+      "familyShareable": false,
+      "internalID": "6738997398",
+      "localizations": [
+        {
+          "description": "Most popular choice",
+          "displayName": "10 Credits",
+          "locale": "en_US"
+        },
+        {
+          "description": "En popüler seçim",
+          "displayName": "10 Kredi",
+          "locale": "tr"
+        }
+      ],
+      "productID": "com.vahiguner.ModaApp.credits_10",
+      "referenceName": "10 Credits",
+      "type": "Consumable"
+    },
+    {
+      "displayPrice": "4.99",
+      "familyShareable": false,
+      "internalID": "6738997399",
+      "localizations": [
+        {
+          "description": "Great for regular users",
+          "displayName": "25 Credits",
+          "locale": "en_US"
+        },
+        {
+          "description": "Düzenli kullanıcılar için",
+          "displayName": "25 Kredi",
+          "locale": "tr"
+        }
+      ],
+      "productID": "com.vahiguner.ModaApp.credits_25",
+      "referenceName": "25 Credits",
+      "type": "Consumable"
+    },
+    {
+      "displayPrice": "9.99",
+      "familyShareable": false,
+      "internalID": "6738997400",
+      "localizations": [
+        {
+          "description": "Best value - Save 20%",
+          "displayName": "50 Credits",
+          "locale": "en_US"
+        },
+        {
+          "description": "En iyi değer - %20 tasarruf",
+          "displayName": "50 Kredi",
+          "locale": "tr"
+        }
+      ],
+      "productID": "com.vahiguner.ModaApp.credits_50",
+      "referenceName": "50 Credits",
+      "type": "Consumable"
+    }
+  ],
+  "settings": {
+    "_applicationInternalID": "6737834563",
+    "_developerTeamID": "LHMQX5XTGM",
+    "_lastSynchronizedDate": 739574400.01
+  },
+  "subscriptions": [],
+  "version": {
+    "major": 1,
+    "minor": 2
+  }
+}

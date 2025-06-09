@@ -197,7 +197,7 @@ enum LocalizedStringKey: String, CaseIterable {
     case listenToAnalysis = "listen_to_analysis"
     case aiStylistVoice = "ai_stylist_voice"
     
-    // Credits
+    // Credits and Purchases
     case noCredits = "no_credits"
     case buyCredits = "buy_credits"
     case later = "later"
@@ -209,6 +209,16 @@ enum LocalizedStringKey: String, CaseIterable {
     case creditsPackage = "credits_package"
     case oneCredit = "one_credit"
     case nCredits = "n_credits"
+    case getMoreCredits = "get_more_credits"
+    case viewAllPackages = "view_all_packages"
+    case mostPopular = "most_popular"
+    case bestValue = "best_value"
+    case instantDelivery = "instant_delivery"
+    case securePayment = "secure_payment"
+    case restorePurchases = "restore_purchases"
+    case restoringPurchases = "restoring_purchases"
+    case noPurchasesToRestore = "no_purchases_to_restore"
+    case purchasesRestored = "purchases_restored"
     
     // Errors
     case error = "error"

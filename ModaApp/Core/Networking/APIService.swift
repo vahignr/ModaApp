@@ -5,7 +5,7 @@
 //
 //  Updated to improve robustness when parsing JSON returned by the
 //  Vision → chat endpoint. We now gracefully extract the first JSON
-//  object from the assistant’s reply, stripping any accidental prose
+//  object from the assistant's reply, stripping any accidental prose
 //  or markdown fences so decoding never blows up & waste user credits.
 //
 
@@ -150,53 +150,6 @@ struct APIService {
             throw APIServiceError.jsonParsingError("Invalid response format")
         }
     }
-    
-    // MARK: - Vision (Original) -----------------------------------------------
-    
-    /// Sends the outfit photo to GPT-4o Vision and returns the stylist comment.
-    static func generateCaption(for image: UIImage, language: Language = LocalizationManager.shared.currentLanguage) async throws -> String {
-        // Check for demo keys
-        if SecretsManager.isUsingDemoKeys {
-            throw APIServiceError.invalidAPIKey
-        }
-        
-        let base64 = try await resizeAndEncode(image,
-                                               maxEdge: ConfigurationManager.maxImageSize,
-                                               quality: ConfigurationManager.imageQuality)
-        
-        // Messages in official multi-modal array-of-parts format
-        let messages: [[String: Any]] = [
-            [
-                "role": "system",
-                "content": ConfigurationManager.fashionPrompt(for: language)
-            ],
-            [
-                "role": "user",
-                "content": [
-                    [
-                        "type": "image_url",
-                        "image_url": [
-                            "url": "data:image/jpeg;base64,\(base64)",
-                            "detail": "low"
-                        ]
-                    ]
-                ]
-            ]
-        ]
-        
-        let body: [String: Any] = [
-            "model": ConfigurationManager.visionModel,
-            "messages": messages,
-            "max_tokens": ConfigurationManager.maxTokens,
-            "temperature": ConfigurationManager.temperature
-        ]
-        
-        let data = try await postJSON(
-            to: ConfigurationManager.openAIChatEndpoint,
-            payload: body
-        )
-        return try parseChatResponse(data)
-    }
 
     // MARK: TTS ---------------------------------------------------------------
     
@@ -213,7 +166,7 @@ struct APIService {
             "model": ConfigurationManager.ttsModel,
             "voice": voice ?? ConfigurationManager.defaultVoice,
             "input": text,
-            "instructions": instructions ?? ConfigurationManager.voiceInstructions(for: language),
+            "instructions": instructions ?? ConfigurationManager.voiceInstructions(for: TonePersona.defaultPersona, language: language),
             "speed": ConfigurationManager.ttsSpeed,
             "output_format": ConfigurationManager.outputFormat
         ]

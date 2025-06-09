@@ -59,17 +59,7 @@ struct ConfigurationManager {
             return "Tutkulu bir sürdürülebilirlik savunucusu gibi bilgili ve özenli konuş. Çevre dostu seçimlere odaklan."
             
         default:
-            return voiceInstructions(for: language)
-        }
-    }
-    
-    // Original voice instructions (fallback)
-    static func voiceInstructions(for language: Language) -> String {
-        switch language {
-        case .english:
-            return "Speak in a warm, natural, and conversational style with an emphasis on sustainable and eco-conscious fashion choices."
-        case .turkish:
-            return "Samimi, doğal ve konuşma tarzında konuş. Sürdürülebilir ve çevre dostu moda seçimlerine vurgu yap."
+            return "Speak in a warm, natural, and conversational style."
         }
     }
     
@@ -252,54 +242,6 @@ struct ConfigurationManager {
         - SADECE geçerli JSON döndürün, ek metin veya markdown yok
         """
     }
-    
-    // MARK: - Fashion Analysis Prompt (Original - for backward compatibility)
-    static func fashionAnalysisPrompt(for occasion: String, language: Language) -> String {
-        // Default to Style Expert tone for backward compatibility
-        return fashionAnalysisPrompt(for: occasion, tone: TonePersona.personas[2], language: language)
-    }
-    
-    // MARK: - Fashion Prompt (Original - for backward compatibility)
-    static func fashionPrompt(for language: Language) -> String {
-        switch language {
-        case .english:
-            return englishFashionPrompt
-        case .turkish:
-            return turkishFashionPrompt
-        }
-    }
-    
-    private static let englishFashionPrompt = """
-    You are a top-tier fashion stylist with a focus on sustainable and eco-conscious style, speaking to a client who just sent you a photo of their outfit.
-
-    • First, open with one warm compliment about the overall look (max 1 short sentence).
-    • Then analyse the outfit in 3–4 sentences:
-        – Mention the key garments, colours, fit, and style vibe you observe.
-        – Highlight what works well from a fashion perspective (proportions, colour harmony, texture, trend alignment, etc.).
-        – When relevant, appreciate sustainable choices like timeless pieces, quality materials, or versatile styling.
-    • Offer 2 concise, constructive suggestions your client could try next time (e.g. accessory swap, layering idea, colour pop, sustainable alternatives).
-    • End with an encouraging sign-off that reinforces their personal style journey.
-
-    Tone: upbeat, friendly, naturally warm, and confidence-boosting—never judgmental.
-    Do **NOT** guess personal attributes (age, gender, ethnicity, body shape) or comment on the person's body; focus only on the clothing and styling choices visible in the image.
-    Target length: 120–180 words. No bullet lists or headings—write as a smooth conversational paragraph.
-    """
-    
-    private static let turkishFashionPrompt = """
-    Sürdürülebilir ve çevre dostu stile odaklanan üst düzey bir moda stilistisiniz, size kıyafet fotoğrafı gönderen bir müşterinizle konuşuyorsunuz.
-
-    • İlk olarak, genel görünüm hakkında sıcak bir iltifatla başlayın (maksimum 1 kısa cümle).
-    • Sonra kıyafeti 3-4 cümlede analiz edin:
-        – Gördüğünüz ana giysileri, renkleri, uyumu ve stil havasını belirtin.
-        – Moda açısından neyin iyi çalıştığını vurgulayın (orantılar, renk uyumu, doku, trend uyumu vb.).
-        – İlgili olduğunda, zamansız parçalar, kaliteli malzemeler veya çok yönlü stil gibi sürdürülebilir seçimleri takdir edin.
-    • Müşterinizin bir dahaki sefere deneyebileceği 2 özlü, yapıcı öneri sunun (örn. aksesuar değişimi, katmanlama fikri, renk patlaması, sürdürülebilir alternatifler).
-    • Kişisel stil yolculuklarını pekiştiren cesaretlendirici bir kapanışla bitirin.
-
-    Ton: neşeli, samimi, doğal sıcak ve güven artırıcı—asla yargılayıcı değil.
-    Kişisel özellikleri (yaş, cinsiyet, etnik köken, vücut şekli) tahmin ETMEYİN veya kişinin vücudu hakkında yorum yapmayın; sadece görselde görünen giyim ve stil seçimlerine odaklanın.
-    Hedef uzunluk: 120-180 kelime. Madde işaretleri veya başlık yok—akıcı konuşma paragrafı olarak yazın.
-    """
     
     // MARK: - App Settings
     static let enableHaptics = true

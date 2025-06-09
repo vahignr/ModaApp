@@ -12,6 +12,7 @@ struct HomeView: View {
     @EnvironmentObject var localizationManager: LocalizationManager
     @State private var selectedFeature: AppFeature?
     @State private var animateElements = false
+    @State private var showPurchaseView = false
     
     var body: some View {
         NavigationStack {
@@ -55,28 +56,49 @@ struct HomeView: View {
                                     Spacer()
                                     
                                     // Credits Display
-                                    HStack(spacing: ModernTheme.Spacing.xs) {
-                                        Image(systemName: "leaf.circle.fill")
-                                            .font(.system(size: 20))
-                                            .foregroundColor(ModernTheme.primary)
-                                        
-                                        Text("\(LocalizationHelpers.formatNumber(creditsManager.remainingCredits))")
-                                            .font(ModernTheme.Typography.body)
-                                            .fontWeight(.semibold)
-                                            .foregroundColor(ModernTheme.textPrimary)
-                                        
-                                        Text(localized(.credits))
-                                            .font(ModernTheme.Typography.caption)
-                                            .foregroundColor(ModernTheme.textSecondary)
+                                    Button {
+                                        showPurchaseView = true
+                                    } label: {
+                                        HStack(spacing: ModernTheme.Spacing.xs) {
+                                            Image(systemName: "leaf.circle.fill")
+                                                .font(.system(size: 20))
+                                                .foregroundColor(ModernTheme.primary)
+                                            
+                                            Text("\(LocalizationHelpers.formatNumber(creditsManager.remainingCredits))")
+                                                .font(ModernTheme.Typography.body)
+                                                .fontWeight(.semibold)
+                                                .foregroundColor(ModernTheme.textPrimary)
+                                            
+                                            Text(localized(.credits))
+                                                .font(ModernTheme.Typography.caption)
+                                                .foregroundColor(ModernTheme.textSecondary)
+                                            
+                                            if creditsManager.remainingCredits == 0 {
+                                                Image(systemName: "plus.circle.fill")
+                                                    .font(.system(size: 16))
+                                                    .foregroundColor(ModernTheme.secondary)
+                                            }
+                                        }
+                                        .padding(.horizontal, ModernTheme.Spacing.md)
+                                        .padding(.vertical, ModernTheme.Spacing.xs)
+                                        .background(
+                                            Capsule()
+                                                .fill(creditsManager.remainingCredits > 0 ? ModernTheme.lightSage : ModernTheme.secondary.opacity(0.1))
+                                        )
                                     }
-                                    .padding(.horizontal, ModernTheme.Spacing.md)
-                                    .padding(.vertical, ModernTheme.Spacing.xs)
-                                    .background(
-                                        Capsule()
-                                            .fill(ModernTheme.lightSage)
-                                    )
+                                    .buttonStyle(PlainButtonStyle())
                                 }
                                 .padding(.horizontal)
+                                
+                                // No Credits Banner (if needed)
+                                if creditsManager.remainingCredits == 0 {
+                                    NoCreditsCard(onPurchase: { showPurchaseView = true })
+                                        .padding(.horizontal)
+                                        .transition(.asymmetric(
+                                            insertion: .scale(scale: 0.9).combined(with: .opacity),
+                                            removal: .scale(scale: 0.9).combined(with: .opacity)
+                                        ))
+                                }
                                 
                                 // Feature Cards
                                 ForEach(AppFeature.allCases) { feature in
@@ -131,12 +153,60 @@ struct HomeView: View {
                         .environmentObject(localizationManager)
                 }
             }
+            .fullScreenCover(isPresented: $showPurchaseView) {
+                PurchaseView()
+                    .environmentObject(localizationManager)
+            }
         }
         .onAppear {
             withAnimation(.easeOut(duration: 0.8)) {
                 animateElements = true
             }
         }
+    }
+}
+
+// MARK: - No Credits Card
+struct NoCreditsCard: View {
+    let onPurchase: () -> Void
+    @EnvironmentObject var localizationManager: LocalizationManager
+    
+    var body: some View {
+        HStack(spacing: ModernTheme.Spacing.md) {
+            VStack(alignment: .leading, spacing: ModernTheme.Spacing.xs) {
+                Text(localized(.noCredits))
+                    .font(ModernTheme.Typography.headline)
+                    .foregroundColor(ModernTheme.textPrimary)
+                
+                Text(localizationManager.currentLanguage == .turkish ?
+                     "Stil analizi için kredi alın" :
+                     "Get credits to analyze your style")
+                    .font(ModernTheme.Typography.caption)
+                    .foregroundColor(ModernTheme.textSecondary)
+            }
+            
+            Spacer()
+            
+            Button(action: onPurchase) {
+                Text(localized(.getMoreCredits))
+                    .font(ModernTheme.Typography.callout)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.white)
+                    .padding(.horizontal, ModernTheme.Spacing.md)
+                    .padding(.vertical, ModernTheme.Spacing.sm)
+                    .background(ModernTheme.secondaryGradient)
+                    .cornerRadius(ModernTheme.CornerRadius.full)
+            }
+        }
+        .padding(ModernTheme.Spacing.lg)
+        .background(
+            RoundedRectangle(cornerRadius: ModernTheme.CornerRadius.large)
+                .fill(ModernTheme.secondary.opacity(0.1))
+                .overlay(
+                    RoundedRectangle(cornerRadius: ModernTheme.CornerRadius.large)
+                        .stroke(ModernTheme.secondary.opacity(0.2), lineWidth: 1)
+                )
+        )
     }
 }
 
