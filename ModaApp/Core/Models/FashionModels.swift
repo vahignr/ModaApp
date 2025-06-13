@@ -295,11 +295,11 @@ extension FashionItem {
         case "dress":
             return ModernTheme.tertiary
         case "shoes", "footwear", "sneakers", "heels", "boots":
-            return ModernTheme.darkSage
+            return ModernTheme.darkMidnight  // Changed from darkSage
         case "accessory", "jewelry", "watch":
             return ModernTheme.accent
         case "bag", "purse", "backpack":
-            return ModernTheme.sand
+            return ModernTheme.cream  // Changed from sand
         case "outerwear", "jacket", "coat":
             return ModernTheme.textSecondary
         default:

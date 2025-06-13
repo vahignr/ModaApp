@@ -7,243 +7,264 @@ struct OccasionSelector: View {
     @State private var showCustomInput = false
     @FocusState private var isCustomFieldFocused: Bool
     @EnvironmentObject var localizationManager: LocalizationManager
+    @State private var hoveredOccasion: Occasion?
+    @State private var hoveredTone: TonePersona?
     
     var body: some View {
-        VStack(spacing: ModernTheme.Spacing.lg) {
+        VStack(spacing: ModernTheme.Spacing.xl) {
             ScrollView {
-                VStack(spacing: ModernTheme.Spacing.xl) {
+                VStack(spacing: ModernTheme.Spacing.xxl) {
                     // Occasion Selection Section
                     VStack(spacing: ModernTheme.Spacing.lg) {
-                        // Header
+                        // Header with animation
                         VStack(spacing: ModernTheme.Spacing.xs) {
-                            Text(localized(.selectTheOccasion))
-                                .font(ModernTheme.Typography.headline)
-                                .foregroundColor(ModernTheme.textPrimary)
+                            HStack {
+                                Image(systemName: "calendar")
+                                    .font(.system(size: 24))
+                                    .foregroundStyle(ModernTheme.primaryGradient)
+                                    .symbolEffect(.bounce, value: selectedOccasion)
+                                
+                                Text(localized(.selectTheOccasion))
+                                    .font(ModernTheme.Typography.title2)
+                                    .foregroundColor(ModernTheme.textPrimary)
+                            }
                             
                             Text(localized(.helpUsStyle))
                                 .font(ModernTheme.Typography.callout)
                                 .foregroundColor(ModernTheme.textSecondary)
                         }
+                        .padding(.horizontal)
                         
-                        // Occasion Grid
+                        // Occasion Grid with 3D effects
                         LazyVGrid(columns: [
                             GridItem(.flexible(), spacing: ModernTheme.Spacing.md),
                             GridItem(.flexible(), spacing: ModernTheme.Spacing.md)
                         ], spacing: ModernTheme.Spacing.md) {
-                            ForEach(Occasion.presets) { occasion in
-                                OccasionCard(
+                            ForEach(Array(Occasion.presets.enumerated()), id: \.element.id) { index, occasion in
+                                Luxury3DOccasionCard(
                                     occasion: occasion,
                                     isSelected: selectedOccasion?.id == occasion.id,
+                                    isHovered: hoveredOccasion?.id == occasion.id,
+                                    animationDelay: Double(index) * 0.05,
                                     action: {
-                                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                                            selectedOccasion = occasion
-                                            if occasion.name == "Custom" {
-                                                showCustomInput = true
-                                                isCustomFieldFocused = true
-                                            } else {
-                                                showCustomInput = false
-                                                customOccasion = ""
-                                            }
-                                        }
+                                        selectOccasion(occasion)
+                                    },
+                                    onHover: { isHovered in
+                                        hoveredOccasion = isHovered ? occasion : nil
                                     }
                                 )
                             }
                         }
+                        .padding(.horizontal)
                         
-                        // Custom Input Field
+                        // Custom Input Field with animation
                         if showCustomInput {
-                            VStack(alignment: .leading, spacing: ModernTheme.Spacing.xs) {
+                            VStack(alignment: .leading, spacing: ModernTheme.Spacing.sm) {
                                 Text(localized(.describeYourOccasion))
                                     .font(ModernTheme.Typography.caption)
                                     .foregroundColor(ModernTheme.textSecondary)
                                 
-                                TextField(localized(.occasionPlaceholder), text: $customOccasion)
-                                    .textFieldStyle(CustomTextFieldStyle())
-                                    .focused($isCustomFieldFocused)
-                                    .submitLabel(.done)
+                                ZStack(alignment: .leading) {
+                                    RoundedRectangle(cornerRadius: ModernTheme.CornerRadius.medium)
+                                        .fill(ModernTheme.glassWhite)
+                                        .background(
+                                            .ultraThinMaterial,
+                                            in: RoundedRectangle(cornerRadius: ModernTheme.CornerRadius.medium)
+                                        )
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: ModernTheme.CornerRadius.medium)
+                                                .stroke(
+                                                    LinearGradient(
+                                                        colors: [ModernTheme.primary, ModernTheme.secondary],
+                                                        startPoint: .leading,
+                                                        endPoint: .trailing
+                                                    ),
+                                                    lineWidth: isCustomFieldFocused ? 2 : 1
+                                                )
+                                        )
+                                    
+                                    TextField(localized(.occasionPlaceholder), text: $customOccasion)
+                                        .padding(ModernTheme.Spacing.md)
+                                        .font(ModernTheme.Typography.body)
+                                        .foregroundColor(ModernTheme.textPrimary)
+                                        .focused($isCustomFieldFocused)
+                                        .submitLabel(.done)
+                                }
+                                .frame(height: 50)
+                                .shadow(
+                                    color: isCustomFieldFocused ? ModernTheme.Shadow.colored.color : Color.clear,
+                                    radius: 8,
+                                    x: 0,
+                                    y: 4
+                                )
                             }
+                            .padding(.horizontal)
                             .transition(.asymmetric(
-                                insertion: .scale.combined(with: .opacity),
-                                removal: .opacity
+                                insertion: .scale(scale: 0.9).combined(with: .opacity),
+                                removal: .scale(scale: 0.9).combined(with: .opacity)
                             ))
                         }
                     }
                     
-                    // Divider
-                    Rectangle()
-                        .fill(ModernTheme.lightSage)
-                        .frame(height: 1)
-                        .padding(.vertical, ModernTheme.Spacing.sm)
+                    // Animated Divider
+                    LuxuryDivider()
                     
                     // Tone Selection Section
                     VStack(spacing: ModernTheme.Spacing.lg) {
-                        // Header
+                        // Header with animation
                         VStack(spacing: ModernTheme.Spacing.xs) {
-                            Text(localized(.selectVoiceTone))
-                                .font(ModernTheme.Typography.headline)
-                                .foregroundColor(ModernTheme.textPrimary)
+                            HStack {
+                                Image(systemName: "person.fill.viewfinder")
+                                    .font(.system(size: 24))
+                                    .foregroundStyle(ModernTheme.secondaryGradient)
+                                    .symbolEffect(.pulse, value: selectedTone)
+                                
+                                Text(localized(.selectVoiceTone))
+                                    .font(ModernTheme.Typography.title2)
+                                    .foregroundColor(ModernTheme.textPrimary)
+                            }
                             
                             Text(localized(.voiceToneDescription))
                                 .font(ModernTheme.Typography.callout)
                                 .foregroundColor(ModernTheme.textSecondary)
                         }
+                        .padding(.horizontal)
                         
-                        // Tone Grid
+                        // Tone Grid with personality animations
                         LazyVGrid(columns: [
                             GridItem(.flexible(), spacing: ModernTheme.Spacing.md),
                             GridItem(.flexible(), spacing: ModernTheme.Spacing.md)
                         ], spacing: ModernTheme.Spacing.md) {
-                            ForEach(TonePersona.personas) { tone in
-                                ToneCard(
+                            ForEach(Array(TonePersona.personas.enumerated()), id: \.element.id) { index, tone in
+                                AnimatedToneCard(
                                     tone: tone,
                                     isSelected: selectedTone?.id == tone.id,
+                                    isHovered: hoveredTone?.id == tone.id,
+                                    animationDelay: Double(index) * 0.05,
                                     action: {
-                                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                                            selectedTone = tone
-                                        }
+                                        selectTone(tone)
+                                    },
+                                    onHover: { isHovered in
+                                        hoveredTone = isHovered ? tone : nil
                                     }
                                 )
                             }
                         }
+                        .padding(.horizontal)
                     }
                 }
                 .padding(.bottom, ModernTheme.Spacing.xxl)
             }
         }
         .onAppear {
-            // Check if custom occasion should be shown
-            if selectedOccasion?.name == "Custom" && !customOccasion.isEmpty {
+            setupInitialState()
+        }
+    }
+    
+    // MARK: - Helper Methods
+    
+    private func selectOccasion(_ occasion: Occasion) {
+        let impact = UIImpactFeedbackGenerator(style: .light)
+        impact.impactOccurred()
+        
+        withAnimation(ModernTheme.springAnimation) {
+            selectedOccasion = occasion
+            if occasion.name == "Custom" {
                 showCustomInput = true
+                isCustomFieldFocused = true
+            } else {
+                showCustomInput = false
+                customOccasion = ""
             }
-            
-            // Ensure a tone is selected
-            if selectedTone == nil {
-                selectedTone = TonePersona.defaultPersona
-            }
+        }
+    }
+    
+    private func selectTone(_ tone: TonePersona) {
+        let impact = UIImpactFeedbackGenerator(style: .light)
+        impact.impactOccurred()
+        
+        withAnimation(ModernTheme.springAnimation) {
+            selectedTone = tone
+        }
+    }
+    
+    private func setupInitialState() {
+        if selectedOccasion?.name == "Custom" && !customOccasion.isEmpty {
+            showCustomInput = true
+        }
+        
+        if selectedTone == nil {
+            selectedTone = TonePersona.defaultPersona
         }
     }
 }
 
-// MARK: - Tone Card Component
-struct ToneCard: View {
-    let tone: TonePersona
-    let isSelected: Bool
-    let action: () -> Void
-    @EnvironmentObject var localizationManager: LocalizationManager
-    
-    @State private var isPressed = false
-    
-    var body: some View {
-        Button(action: action) {
-            VStack(spacing: ModernTheme.Spacing.sm) {
-                // Icon
-                ZStack {
-                    Circle()
-                        .fill(isSelected ?
-                            LinearGradient(
-                                colors: [ModernTheme.secondary, ModernTheme.secondary.opacity(0.8)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            ) :
-                            LinearGradient(
-                                colors: [ModernTheme.cream, ModernTheme.cream],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                        .frame(width: 56, height: 56)
-                    
-                    Image(systemName: tone.icon)
-                        .font(.system(size: 24, weight: .medium))
-                        .foregroundColor(isSelected ? .white : ModernTheme.secondary)
-                }
-                .scaleEffect(isPressed ? 0.95 : 1.0)
-                
-                // Text
-                VStack(spacing: 2) {
-                    Text(localized(tone.localizationKey))
-                        .font(ModernTheme.Typography.caption)
-                        .fontWeight(isSelected ? .semibold : .medium)
-                        .foregroundColor(isSelected ? ModernTheme.secondary : ModernTheme.textPrimary)
-                        .multilineTextAlignment(.center)
-                        .lineLimit(2)
-                        .minimumScaleFactor(0.9)
-                    
-                    Text(localized(tone.descriptionKey))
-                        .font(ModernTheme.Typography.caption2)
-                        .foregroundColor(ModernTheme.textTertiary)
-                        .multilineTextAlignment(.center)
-                        .lineLimit(2)
-                        .opacity(0.8)
-                }
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, ModernTheme.Spacing.md)
-            .padding(.horizontal, ModernTheme.Spacing.sm)
-            .background(
-                RoundedRectangle(cornerRadius: ModernTheme.CornerRadius.large)
-                    .fill(isSelected ? ModernTheme.secondary.opacity(0.1) : ModernTheme.surface)
-                    .shadow(
-                        color: isSelected ? ModernTheme.secondary.opacity(0.2) : ModernTheme.Shadow.small.color,
-                        radius: isSelected ? 8 : ModernTheme.Shadow.small.radius,
-                        x: 0,
-                        y: isSelected ? 4 : ModernTheme.Shadow.small.y
-                    )
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: ModernTheme.CornerRadius.large)
-                    .stroke(isSelected ? ModernTheme.secondary : Color.clear, lineWidth: 2)
-            )
-        }
-        .buttonStyle(PlainButtonStyle())
-        .scaleEffect(isPressed ? 0.98 : 1.0)
-        .onLongPressGesture(minimumDuration: .infinity, maximumDistance: .infinity,
-            pressing: { pressing in
-                withAnimation(.easeInOut(duration: 0.1)) {
-                    isPressed = pressing
-                }
-            },
-            perform: {}
-        )
-    }
-}
-
-// MARK: - Occasion Card Component
-struct OccasionCard: View {
+// MARK: - Luxury 3D Occasion Card
+struct Luxury3DOccasionCard: View {
     let occasion: Occasion
     let isSelected: Bool
+    let isHovered: Bool
+    let animationDelay: Double
     let action: () -> Void
-    @EnvironmentObject var localizationManager: LocalizationManager
+    let onHover: (Bool) -> Void
     
+    @EnvironmentObject var localizationManager: LocalizationManager
     @State private var isPressed = false
+    @State private var appeared = false
+    @State private var rotation3D: Double = 0
     
     var body: some View {
         Button(action: action) {
             VStack(spacing: ModernTheme.Spacing.sm) {
-                // Icon
+                // 3D Icon Container
                 ZStack {
+                    // Shadow layer
                     Circle()
-                        .fill(isSelected ?
+                        .fill(
+                            isSelected ?
+                            ModernTheme.secondary.opacity(0.3) :
+                            ModernTheme.primary.opacity(0.1)
+                        )
+                        .frame(width: 64, height: 64)
+                        .blur(radius: 15)
+                        .offset(y: 5)
+                        .scaleEffect(isHovered ? 1.1 : 1.0)
+                    
+                    // Gradient background
+                    Circle()
+                        .fill(
+                            isSelected ?
+                            ModernTheme.primaryGradient :
                             LinearGradient(
-                                colors: [ModernTheme.primary, ModernTheme.primary.opacity(0.8)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            ) :
-                            LinearGradient(
-                                colors: [ModernTheme.lightSage, ModernTheme.lightSage],
+                                colors: [ModernTheme.lightBlush, ModernTheme.accent],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             )
                         )
-                        .frame(width: 56, height: 56)
+                        .frame(width: 60, height: 60)
+                        .rotation3DEffect(
+                            .degrees(rotation3D),
+                            axis: (x: 0, y: 1, z: 0),
+                            perspective: 0.5
+                        )
+                        .overlay(
+                            Circle()
+                                .stroke(
+                                    isSelected ? ModernTheme.glassBorder : Color.clear,
+                                    lineWidth: 2
+                                )
+                        )
                     
+                    // Icon with animation
                     Image(systemName: occasion.icon)
-                        .font(.system(size: 24, weight: .medium))
+                        .font(.system(size: 28, weight: .medium))
                         .foregroundColor(isSelected ? .white : ModernTheme.primary)
+                        .scaleEffect(isHovered ? 1.1 : 1.0)
+                        .rotationEffect(.degrees(isHovered ? 10 : 0))
                 }
-                .scaleEffect(isPressed ? 0.95 : 1.0)
+                .scaleEffect(isPressed ? 0.9 : 1.0)
                 
-                // Text
+                // Text content
                 VStack(spacing: 2) {
                     Text(localized(occasion.localizationKey))
                         .font(ModernTheme.Typography.caption)
@@ -266,45 +287,272 @@ struct OccasionCard: View {
             .padding(.horizontal, ModernTheme.Spacing.sm)
             .background(
                 RoundedRectangle(cornerRadius: ModernTheme.CornerRadius.large)
-                    .fill(isSelected ? ModernTheme.primary.opacity(0.1) : ModernTheme.surface)
-                    .shadow(
-                        color: isSelected ? ModernTheme.primary.opacity(0.2) : ModernTheme.Shadow.small.color,
-                        radius: isSelected ? 8 : ModernTheme.Shadow.small.radius,
-                        x: 0,
-                        y: isSelected ? 4 : ModernTheme.Shadow.small.y
+                    .fill(
+                        isSelected ?
+                        ModernTheme.primary.opacity(0.08) :
+                        ModernTheme.glassWhite
+                    )
+                    .background(
+                        .ultraThinMaterial,
+                        in: RoundedRectangle(cornerRadius: ModernTheme.CornerRadius.large)
                     )
             )
             .overlay(
                 RoundedRectangle(cornerRadius: ModernTheme.CornerRadius.large)
-                    .stroke(isSelected ? ModernTheme.primary : Color.clear, lineWidth: 2)
+                    .stroke(
+                        isSelected ?
+                        ModernTheme.primaryGradient :
+                        LinearGradient(colors: [ModernTheme.glassBorder], startPoint: .leading, endPoint: .trailing),
+                        lineWidth: isSelected ? 2 : 1
+                    )
             )
+            .shadow(
+                color: isSelected ? ModernTheme.Shadow.colored.color : ModernTheme.Shadow.small.color,
+                radius: isSelected ? 12 : ModernTheme.Shadow.small.radius,
+                x: 0,
+                y: isSelected ? 6 : ModernTheme.Shadow.small.y
+            )
+            .scaleEffect(appeared ? 1 : 0.8)
+            .opacity(appeared ? 1 : 0)
         }
         .buttonStyle(PlainButtonStyle())
         .scaleEffect(isPressed ? 0.98 : 1.0)
-        .onLongPressGesture(minimumDuration: .infinity, maximumDistance: .infinity,
+        .onHover { hovering in
+            withAnimation(ModernTheme.springAnimation) {
+                onHover(hovering)
+                if hovering {
+                    rotation3D = 15
+                } else {
+                    rotation3D = 0
+                }
+            }
+        }
+        .onLongPressGesture(
+            minimumDuration: .infinity,
+            maximumDistance: .infinity,
             pressing: { pressing in
-                withAnimation(.easeInOut(duration: 0.1)) {
+                withAnimation(ModernTheme.springAnimation) {
                     isPressed = pressing
                 }
             },
             perform: {}
         )
+        .onAppear {
+            withAnimation(
+                .spring(response: 0.6, dampingFraction: 0.7)
+                .delay(animationDelay)
+            ) {
+                appeared = true
+            }
+        }
     }
 }
 
-// MARK: - Custom Text Field Style
-struct CustomTextFieldStyle: TextFieldStyle {
-    func _body(configuration: TextField<Self._Label>) -> some View {
-        configuration
-            .padding(ModernTheme.Spacing.md)
-            .background(ModernTheme.surface)
-            .cornerRadius(ModernTheme.CornerRadius.medium)
-            .overlay(
-                RoundedRectangle(cornerRadius: ModernTheme.CornerRadius.medium)
-                    .stroke(ModernTheme.primary.opacity(0.3), lineWidth: 1)
+// MARK: - Animated Tone Card
+struct AnimatedToneCard: View {
+    let tone: TonePersona
+    let isSelected: Bool
+    let isHovered: Bool
+    let animationDelay: Double
+    let action: () -> Void
+    let onHover: (Bool) -> Void
+    
+    @EnvironmentObject var localizationManager: LocalizationManager
+    @State private var isPressed = false
+    @State private var appeared = false
+    @State private var iconAnimation = false
+    @State private var glowAnimation = false
+    
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: ModernTheme.Spacing.sm) {
+                // Animated Icon Container
+                ZStack {
+                    // Animated glow rings
+                    if isSelected {
+                        ForEach(0..<3) { index in
+                            Circle()
+                                .stroke(ModernTheme.secondary.opacity(0.3 - Double(index) * 0.1), lineWidth: 2)
+                                .frame(width: 60 + CGFloat(index * 15), height: 60 + CGFloat(index * 15))
+                                .scaleEffect(glowAnimation ? 1.2 : 1.0)
+                                .opacity(glowAnimation ? 0 : 1)
+                                .animation(
+                                    .easeOut(duration: 2)
+                                    .repeatForever(autoreverses: false)
+                                    .delay(Double(index) * 0.3),
+                                    value: glowAnimation
+                                )
+                        }
+                    }
+                    
+                    // Main circle with gradient
+                    Circle()
+                        .fill(
+                            isSelected ?
+                            ModernTheme.secondaryGradient :
+                            LinearGradient(
+                                colors: [ModernTheme.cream, ModernTheme.lightBlush],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 60, height: 60)
+                        .overlay(
+                            Circle()
+                                .stroke(
+                                    isSelected ?
+                                    ModernTheme.glassBorder :
+                                    ModernTheme.platinum.opacity(0.5),
+                                    lineWidth: 2
+                                )
+                        )
+                    
+                    // Animated icon
+                    Image(systemName: tone.icon)
+                        .font(.system(size: 28, weight: .medium))
+                        .foregroundColor(isSelected ? .white : ModernTheme.secondary)
+                        .rotationEffect(.degrees(iconAnimation ? 360 : 0))
+                        .scaleEffect(isHovered ? 1.15 : 1.0)
+                        .symbolEffect(
+                            tone.icon == "sparkles" ? .variableColor.iterative : .bounce,
+                            value: isHovered
+                        )
+                }
+                .scaleEffect(isPressed ? 0.9 : 1.0)
+                
+                // Text content with fade animation
+                VStack(spacing: 2) {
+                    Text(localized(tone.localizationKey))
+                        .font(ModernTheme.Typography.caption)
+                        .fontWeight(isSelected ? .semibold : .medium)
+                        .foregroundColor(isSelected ? ModernTheme.secondary : ModernTheme.textPrimary)
+                        .multilineTextAlignment(.center)
+                        .lineLimit(2)
+                        .minimumScaleFactor(0.9)
+                    
+                    Text(localized(tone.descriptionKey))
+                        .font(ModernTheme.Typography.caption2)
+                        .foregroundColor(ModernTheme.textTertiary)
+                        .multilineTextAlignment(.center)
+                        .lineLimit(2)
+                        .opacity(isHovered ? 1 : 0.8)
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, ModernTheme.Spacing.md)
+            .padding(.horizontal, ModernTheme.Spacing.sm)
+            .background(
+                RoundedRectangle(cornerRadius: ModernTheme.CornerRadius.large)
+                    .fill(
+                        isSelected ?
+                        ModernTheme.secondary.opacity(0.08) :
+                        ModernTheme.glassWhite
+                    )
+                    .background(
+                        .ultraThinMaterial,
+                        in: RoundedRectangle(cornerRadius: ModernTheme.CornerRadius.large)
+                    )
             )
-            .font(ModernTheme.Typography.body)
-            .foregroundColor(ModernTheme.textPrimary)
+            .overlay(
+                RoundedRectangle(cornerRadius: ModernTheme.CornerRadius.large)
+                    .stroke(
+                        isSelected ?
+                        ModernTheme.secondaryGradient :
+                        LinearGradient(colors: [ModernTheme.glassBorder], startPoint: .leading, endPoint: .trailing),
+                        lineWidth: isSelected ? 2 : 1
+                    )
+            )
+            .shadow(
+                color: isSelected ? ModernTheme.Shadow.colored.color : ModernTheme.Shadow.small.color,
+                radius: isSelected ? 12 : ModernTheme.Shadow.small.radius,
+                x: 0,
+                y: isSelected ? 6 : ModernTheme.Shadow.small.y
+            )
+            .scaleEffect(appeared ? 1 : 0.8)
+            .opacity(appeared ? 1 : 0)
+        }
+        .buttonStyle(PlainButtonStyle())
+        .scaleEffect(isPressed ? 0.98 : 1.0)
+        .onHover { hovering in
+            withAnimation(ModernTheme.springAnimation) {
+                onHover(hovering)
+            }
+        }
+        .onLongPressGesture(
+            minimumDuration: .infinity,
+            maximumDistance: .infinity,
+            pressing: { pressing in
+                withAnimation(ModernTheme.springAnimation) {
+                    isPressed = pressing
+                }
+            },
+            perform: {}
+        )
+        .onAppear {
+            withAnimation(
+                .spring(response: 0.6, dampingFraction: 0.7)
+                .delay(animationDelay)
+            ) {
+                appeared = true
+            }
+            
+            if isSelected {
+                glowAnimation = true
+            }
+            
+            // Special animations for specific personas
+            if tone.name == "Fashion Police" && isSelected {
+                withAnimation(.linear(duration: 3).repeatForever(autoreverses: false)) {
+                    iconAnimation = true
+                }
+            }
+        }
+        .onChange(of: isSelected) { newValue in
+            if newValue {
+                glowAnimation = true
+            }
+        }
+    }
+}
+
+// MARK: - Luxury Divider
+struct LuxuryDivider: View {
+    @State private var shimmerOffset: CGFloat = -100
+    
+    var body: some View {
+        ZStack {
+            // Base line
+            Rectangle()
+                .fill(ModernTheme.platinum.opacity(0.3))
+                .frame(height: 1)
+            
+            // Shimmer effect
+            Rectangle()
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            Color.clear,
+                            ModernTheme.secondary.opacity(0.5),
+                            Color.clear
+                        ],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                )
+                .frame(width: 50, height: 1)
+                .offset(x: shimmerOffset)
+        }
+        .frame(height: 1)
+        .padding(.horizontal, ModernTheme.Spacing.xl)
+        .padding(.vertical, ModernTheme.Spacing.sm)
+        .onAppear {
+            withAnimation(
+                .linear(duration: 3)
+                .repeatForever(autoreverses: false)
+            ) {
+                shimmerOffset = UIScreen.main.bounds.width + 100
+            }
+        }
     }
 }
 
@@ -316,31 +564,19 @@ struct CustomTextFieldStyle: TextFieldStyle {
         @State var selectedTone: TonePersona? = TonePersona.defaultPersona
         
         var body: some View {
-            VStack {
-                OccasionSelector(
-                    selectedOccasion: $selectedOccasion,
-                    customOccasion: $customOccasion,
-                    selectedTone: $selectedTone
-                )
-                .padding()
+            ZStack {
+                ModernTheme.background
+                    .ignoresSafeArea()
                 
-                // Preview selected values
-                VStack(spacing: 8) {
-                    if let occasion = selectedOccasion {
-                        Text("Occasion: \(occasion.name)")
-                        if !customOccasion.isEmpty {
-                            Text("Custom: \(customOccasion)")
-                        }
-                    }
-                    if let tone = selectedTone {
-                        Text("Tone: \(tone.name)")
-                    }
+                ScrollView {
+                    OccasionSelector(
+                        selectedOccasion: $selectedOccasion,
+                        customOccasion: $customOccasion,
+                        selectedTone: $selectedTone
+                    )
+                    .padding()
                 }
-                .padding()
-                .background(ModernTheme.primary.opacity(0.1))
-                .cornerRadius(8)
             }
-            .background(ModernTheme.background)
             .environmentObject(LocalizationManager.shared)
         }
     }

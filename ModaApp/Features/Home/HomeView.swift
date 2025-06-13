@@ -2,7 +2,7 @@
 //  HomeView.swift
 //  ModaApp
 //
-//  Main screen showing app features and navigation
+//  Luxury home screen with animations and parallax effects
 //
 
 import SwiftUI
@@ -13,41 +13,32 @@ struct HomeView: View {
     @State private var selectedFeature: AppFeature?
     @State private var animateElements = false
     @State private var showPurchaseView = false
+    @State private var scrollOffset: CGFloat = 0
+    @State private var heroScale: CGFloat = 1.0
+    @State private var sparklePositions: [CGPoint] = []
     
     var body: some View {
         NavigationStack {
             ZStack {
-                // Clean background
-                ModernTheme.background
-                    .ignoresSafeArea()
+                // Animated gradient background
+                AnimatedBackground()
                 
-                // Subtle pattern overlay
+                // Sparkle effects
+                SparkleOverlay(positions: $sparklePositions)
+                
+                // Main content
                 GeometryReader { geometry in
-                    ForEach(0..<5) { index in
-                        Circle()
-                            .fill(ModernTheme.lightSage.opacity(0.05))
-                            .frame(width: 300, height: 300)
-                            .offset(
-                                x: CGFloat.random(in: -100...geometry.size.width),
-                                y: CGFloat.random(in: -100...geometry.size.height)
-                            )
-                            .blur(radius: 40)
-                    }
-                }
-                .ignoresSafeArea()
-                
-                VStack(spacing: 0) {
                     ScrollView {
-                        VStack(spacing: ModernTheme.Spacing.xl) {
-                            // Welcome Section
-                            WelcomeSection()
-                                .padding(.top, 20) // Reduced from 80 to 20
+                        VStack(spacing: 0) {
+                            // Hero Section with parallax
+                            HeroSection(scrollOffset: scrollOffset, scale: heroScale)
+                                .frame(height: geometry.size.height * 0.5)
                                 .opacity(animateElements ? 1 : 0)
-                                .offset(y: animateElements ? 0 : 20)
+                                .offset(y: animateElements ? 0 : 50)
                             
-                            // Feature Section with Credits
-                            VStack(alignment: .leading, spacing: ModernTheme.Spacing.lg) {
-                                // Get Started and Credits Row
+                            // Features Section
+                            VStack(spacing: ModernTheme.Spacing.xl) {
+                                // Credits and Get Started
                                 HStack(alignment: .center) {
                                     Text(localized(.getStarted))
                                         .font(ModernTheme.Typography.title2)
@@ -55,42 +46,15 @@ struct HomeView: View {
                                     
                                     Spacer()
                                     
-                                    // Credits Display
-                                    Button {
-                                        showPurchaseView = true
-                                    } label: {
-                                        HStack(spacing: ModernTheme.Spacing.xs) {
-                                            Image(systemName: "leaf.circle.fill")
-                                                .font(.system(size: 20))
-                                                .foregroundColor(ModernTheme.primary)
-                                            
-                                            Text("\(LocalizationHelpers.formatNumber(creditsManager.remainingCredits))")
-                                                .font(ModernTheme.Typography.body)
-                                                .fontWeight(.semibold)
-                                                .foregroundColor(ModernTheme.textPrimary)
-                                            
-                                            Text(localized(.credits))
-                                                .font(ModernTheme.Typography.caption)
-                                                .foregroundColor(ModernTheme.textSecondary)
-                                            
-                                            if creditsManager.remainingCredits == 0 {
-                                                Image(systemName: "plus.circle.fill")
-                                                    .font(.system(size: 16))
-                                                    .foregroundColor(ModernTheme.secondary)
-                                            }
-                                        }
-                                        .padding(.horizontal, ModernTheme.Spacing.md)
-                                        .padding(.vertical, ModernTheme.Spacing.xs)
-                                        .background(
-                                            Capsule()
-                                                .fill(creditsManager.remainingCredits > 0 ? ModernTheme.lightSage : ModernTheme.secondary.opacity(0.1))
-                                        )
-                                    }
-                                    .buttonStyle(PlainButtonStyle())
+                                    CreditsButton(
+                                        credits: creditsManager.remainingCredits,
+                                        action: { showPurchaseView = true }
+                                    )
                                 }
                                 .padding(.horizontal)
+                                .padding(.top, ModernTheme.Spacing.xl)
                                 
-                                // No Credits Banner (if needed)
+                                // No Credits Card
                                 if creditsManager.remainingCredits == 0 {
                                     NoCreditsCard(onPurchase: { showPurchaseView = true })
                                         .padding(.horizontal)
@@ -100,41 +64,42 @@ struct HomeView: View {
                                         ))
                                 }
                                 
-                                // Feature Cards
-                                ForEach(AppFeature.allCases) { feature in
-                                    MinimalFeatureCard(
+                                // Feature Cards with staggered animation
+                                ForEach(Array(AppFeature.allCases.enumerated()), id: \.element.id) { index, feature in
+                                    LuxuryFeatureCard(
                                         feature: feature,
-                                        action: { selectedFeature = feature }
+                                        action: { selectedFeature = feature },
+                                        animationDelay: Double(index) * 0.15
                                     )
                                     .padding(.horizontal)
                                     .opacity(animateElements ? 1 : 0)
-                                    .offset(y: animateElements ? 0 : 30)
-                                }
-                            }
-                            .padding(.top, ModernTheme.Spacing.lg)
-                            
-                            // Footer
-                            VStack(spacing: ModernTheme.Spacing.xs) {
-                                HStack(spacing: 4) {
-                                    ForEach(0..<3) { _ in
-                                        Circle()
-                                            .fill(ModernTheme.tertiary)
-                                            .frame(width: 4, height: 4)
-                                    }
+                                    .offset(y: animateElements ? 0 : 50)
                                 }
                                 
-                                Text(localized(.madeWithLove))
-                                    .font(ModernTheme.Typography.caption)
-                                    .foregroundColor(ModernTheme.textTertiary)
+                                // Footer
+                                FooterView()
+                                    .padding(.top, ModernTheme.Spacing.xxxl)
+                                    .padding(.bottom, 120)
                             }
-                            .padding(.top, ModernTheme.Spacing.xxl)
-                            .padding(.bottom, ModernTheme.Spacing.xxl)
+                            .background(
+                                GeometryReader { geo in
+                                    Color.clear
+                                        .preference(
+                                            key: ScrollOffsetPreferenceKey.self,
+                                            value: geo.frame(in: .named("scroll")).minY
+                                        )
+                                }
+                            )
                         }
-                        .padding(.bottom, 100) // Space for language button
+                    }
+                    .coordinateSpace(name: "scroll")
+                    .onPreferenceChange(ScrollOffsetPreferenceKey.self) { value in
+                        scrollOffset = value
+                        heroScale = 1 + (max(0, value) / 500)
                     }
                 }
                 
-                // Language Button at Bottom Right
+                // Language Button
                 VStack {
                     Spacer()
                     HStack {
@@ -145,7 +110,7 @@ struct HomeView: View {
                     }
                 }
             }
-            .navigationBarHidden(true) // Hide the navigation bar completely
+            .navigationBarHidden(true)
             .fullScreenCover(item: $selectedFeature) { feature in
                 switch feature {
                 case .modaAnalyzer:
@@ -159,8 +124,379 @@ struct HomeView: View {
             }
         }
         .onAppear {
-            withAnimation(.easeOut(duration: 0.8)) {
+            withAnimation(.easeOut(duration: 1.0)) {
                 animateElements = true
+            }
+            generateSparklePositions()
+        }
+    }
+    
+    private func generateSparklePositions() {
+        sparklePositions = (0..<15).map { _ in
+            CGPoint(
+                x: CGFloat.random(in: 0...UIScreen.main.bounds.width),
+                y: CGFloat.random(in: 0...UIScreen.main.bounds.height)
+            )
+        }
+    }
+}
+
+// MARK: - Animated Background
+struct AnimatedBackground: View {
+    @State private var animateGradient = false
+    
+    var body: some View {
+        ZStack {
+            // Base gradient
+            LinearGradient(
+                colors: [
+                    ModernTheme.background,
+                    ModernTheme.lightBlush,
+                    ModernTheme.background
+                ],
+                startPoint: animateGradient ? .topLeading : .bottomTrailing,
+                endPoint: animateGradient ? .bottomTrailing : .topLeading
+            )
+            .ignoresSafeArea()
+            .onAppear {
+                withAnimation(.linear(duration: 10).repeatForever(autoreverses: true)) {
+                    animateGradient.toggle()
+                }
+            }
+            
+            // Radial overlay
+            ModernTheme.radialBlushGradient
+                .ignoresSafeArea()
+                .opacity(0.5)
+        }
+    }
+}
+
+// MARK: - Sparkle Overlay
+struct SparkleOverlay: View {
+    @Binding var positions: [CGPoint]
+    
+    var body: some View {
+        ZStack {
+            ForEach(positions.indices, id: \.self) { index in
+                SparkleView()
+                    .position(positions[index])
+                    .animation(
+                        Animation.easeInOut(duration: Double.random(in: 2...4))
+                            .repeatForever(autoreverses: true)
+                            .delay(Double.random(in: 0...2)),
+                        value: positions
+                    )
+            }
+        }
+        .ignoresSafeArea()
+    }
+}
+
+struct SparkleView: View {
+    @State private var opacity: Double = Double.random(in: 0.3...0.7)
+    @State private var scale: CGFloat = CGFloat.random(in: 0.5...1.2)
+    
+    var body: some View {
+        Image(systemName: "sparkle")
+            .font(.system(size: CGFloat.random(in: 8...16)))
+            .foregroundColor(ModernTheme.secondary)
+            .opacity(opacity)
+            .scaleEffect(scale)
+            .onAppear {
+                withAnimation(.easeInOut(duration: Double.random(in: 1...3)).repeatForever(autoreverses: true)) {
+                    opacity = opacity == 0.3 ? 0.7 : 0.3
+                    scale = scale == 0.5 ? 1.2 : 0.5
+                }
+            }
+    }
+}
+
+// MARK: - Hero Section
+struct HeroSection: View {
+    let scrollOffset: CGFloat
+    let scale: CGFloat
+    @EnvironmentObject var localizationManager: LocalizationManager
+    @State private var logoRotation: Double = 0
+    
+    var body: some View {
+        ZStack {
+            // Parallax background shapes
+            Circle()
+                .fill(ModernTheme.secondary.opacity(0.1))
+                .frame(width: 300, height: 300)
+                .blur(radius: 30)
+                .offset(x: -100, y: -50 + scrollOffset * 0.3)
+            
+            Circle()
+                .fill(ModernTheme.tertiary.opacity(0.1))
+                .frame(width: 200, height: 200)
+                .blur(radius: 20)
+                .offset(x: 120, y: 100 + scrollOffset * 0.2)
+            
+            // Main content
+            VStack(spacing: ModernTheme.Spacing.lg) {
+                // Animated Logo
+                ZStack {
+                    Circle()
+                        .fill(ModernTheme.primaryGradient)
+                        .frame(width: 120, height: 120)
+                        .blur(radius: 20)
+                        .scaleEffect(scale)
+                    
+                    Circle()
+                        .fill(ModernTheme.primary)
+                        .frame(width: 100, height: 100)
+                        .overlay(
+                            Image(systemName: "leaf.fill")
+                                .font(.system(size: 50, weight: .medium))
+                                .foregroundColor(.white)
+                                .rotationEffect(.degrees(logoRotation))
+                        )
+                        .shadow(
+                            color: ModernTheme.Shadow.glow.color,
+                            radius: ModernTheme.Shadow.glow.radius
+                        )
+                }
+                .scaleEffect(scale)
+                .onAppear {
+                    withAnimation(.linear(duration: 20).repeatForever(autoreverses: false)) {
+                        logoRotation = 360
+                    }
+                }
+                
+                // App Name
+                Text(localized(.appName))
+                    .font(ModernTheme.Typography.largeTitle)
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [ModernTheme.primary, ModernTheme.secondary],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .scaleEffect(scale)
+                
+                // Welcome Text
+                VStack(spacing: ModernTheme.Spacing.xs) {
+                    Text(localized(.welcomeTo))
+                        .font(ModernTheme.Typography.title2)
+                        .foregroundColor(ModernTheme.textSecondary)
+                    
+                    Text(localized(.sustainableStyleJourney))
+                        .font(ModernTheme.Typography.title)
+                        .fontWeight(.bold)
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [ModernTheme.primary, ModernTheme.secondary, ModernTheme.tertiary],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .multilineTextAlignment(.center)
+                    
+                    Text(localized(.ecoDescription))
+                        .font(ModernTheme.Typography.body)
+                        .foregroundColor(ModernTheme.textSecondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, ModernTheme.Spacing.xl)
+                        .padding(.top, ModernTheme.Spacing.xs)
+                }
+                .offset(y: scrollOffset * 0.1)
+            }
+        }
+    }
+}
+
+// MARK: - Credits Button
+struct CreditsButton: View {
+    let credits: Int
+    let action: () -> Void
+    @State private var isPressed = false
+    
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: ModernTheme.Spacing.xs) {
+                ZStack {
+                    Circle()
+                        .fill(ModernTheme.secondaryGradient)
+                        .frame(width: 24, height: 24)
+                    
+                    Image(systemName: "leaf.circle.fill")
+                        .font(.system(size: 16))
+                        .foregroundColor(.white)
+                }
+                
+                Text("\(LocalizationHelpers.formatNumber(credits))")
+                    .font(ModernTheme.Typography.headline)
+                    .fontWeight(.bold)
+                    .foregroundColor(ModernTheme.primary)
+                
+                Text(LocalizationManager.shared.string(for: .credits))
+                    .font(ModernTheme.Typography.caption)
+                    .foregroundColor(ModernTheme.textSecondary)
+                
+                if credits == 0 {
+                    Image(systemName: "plus.circle.fill")
+                        .font(.system(size: 20))
+                        .foregroundColor(ModernTheme.secondary)
+                        .transition(.scale.combined(with: .opacity))
+                }
+            }
+            .padding(.horizontal, ModernTheme.Spacing.md)
+            .padding(.vertical, ModernTheme.Spacing.sm)
+            .background(
+                Capsule()
+                    .fill(credits > 0 ? ModernTheme.glassWhite : ModernTheme.secondary.opacity(0.1))
+                    .background(
+                        .ultraThinMaterial,
+                        in: Capsule()
+                    )
+            )
+            .overlay(
+                Capsule()
+                    .stroke(
+                        credits > 0 ? ModernTheme.glassBorder : ModernTheme.secondary.opacity(0.3),
+                        lineWidth: 1
+                    )
+            )
+            .shadow(
+                color: ModernTheme.Shadow.small.color,
+                radius: ModernTheme.Shadow.small.radius,
+                x: 0,
+                y: ModernTheme.Shadow.small.y
+            )
+            .scaleEffect(isPressed ? 0.95 : 1.0)
+        }
+        .buttonStyle(PlainButtonStyle())
+        .onLongPressGesture(
+            minimumDuration: .infinity,
+            maximumDistance: .infinity,
+            pressing: { pressing in
+                withAnimation(ModernTheme.springAnimation) {
+                    isPressed = pressing
+                }
+            },
+            perform: {}
+        )
+    }
+}
+
+// MARK: - Luxury Feature Card
+struct LuxuryFeatureCard: View {
+    @EnvironmentObject var localizationManager: LocalizationManager
+    let feature: AppFeature
+    let action: () -> Void
+    let animationDelay: Double
+    
+    @State private var isPressed = false
+    @State private var isHovered = false
+    @State private var appeared = false
+    
+    var body: some View {
+        Button(action: {
+            let impact = UIImpactFeedbackGenerator(style: .light)
+            impact.impactOccurred()
+            action()
+        }) {
+            HStack(spacing: ModernTheme.Spacing.lg) {
+                // Icon with glow effect
+                ZStack {
+                    Circle()
+                        .fill(ModernTheme.primaryGradient)
+                        .frame(width: 64, height: 64)
+                        .blur(radius: isHovered ? 15 : 10)
+                        .opacity(0.5)
+                    
+                    Circle()
+                        .fill(ModernTheme.primaryGradient)
+                        .frame(width: 56, height: 56)
+                        .overlay(
+                            Image(systemName: feature.icon)
+                                .font(.system(size: 26, weight: .medium))
+                                .foregroundColor(.white)
+                                .rotationEffect(.degrees(isHovered ? 10 : 0))
+                        )
+                        .shadow(
+                            color: ModernTheme.Shadow.colored.color,
+                            radius: ModernTheme.Shadow.colored.radius,
+                            x: 0,
+                            y: ModernTheme.Shadow.colored.y
+                        )
+                }
+                
+                // Content
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(localized(feature.titleKey))
+                        .font(ModernTheme.Typography.headline)
+                        .foregroundColor(ModernTheme.textPrimary)
+                    
+                    Text(localized(feature.descriptionKey))
+                        .font(ModernTheme.Typography.callout)
+                        .foregroundColor(ModernTheme.textSecondary)
+                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                
+                Spacer()
+                
+                // Arrow with animation
+                Image(systemName: "arrow.right.circle.fill")
+                    .font(.system(size: 32))
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [ModernTheme.secondary, ModernTheme.tertiary],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .rotationEffect(.degrees(isHovered ? 45 : 0))
+                    .offset(x: isHovered ? 5 : 0)
+            }
+            .padding(ModernTheme.Spacing.lg)
+            .background(
+                RoundedRectangle(cornerRadius: ModernTheme.CornerRadius.xl)
+                    .fill(ModernTheme.glassWhite)
+                    .background(
+                        .ultraThinMaterial,
+                        in: RoundedRectangle(cornerRadius: ModernTheme.CornerRadius.xl)
+                    )
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: ModernTheme.CornerRadius.xl)
+                    .stroke(ModernTheme.glassBorder, lineWidth: 1)
+            )
+            .shadow(
+                color: isHovered ? ModernTheme.Shadow.medium.color : ModernTheme.Shadow.small.color,
+                radius: isHovered ? ModernTheme.Shadow.medium.radius : ModernTheme.Shadow.small.radius,
+                x: 0,
+                y: isHovered ? ModernTheme.Shadow.medium.y : ModernTheme.Shadow.small.y
+            )
+            .scaleEffect(isPressed ? 0.98 : 1.0)
+            .offset(x: appeared ? 0 : -50)
+            .opacity(appeared ? 1 : 0)
+        }
+        .buttonStyle(PlainButtonStyle())
+        .disabled(!feature.isAvailable)
+        .onHover { hovering in
+            withAnimation(ModernTheme.springAnimation) {
+                isHovered = hovering
+            }
+        }
+        .onLongPressGesture(
+            minimumDuration: .infinity,
+            maximumDistance: .infinity,
+            pressing: { pressing in
+                withAnimation(ModernTheme.springAnimation) {
+                    isPressed = pressing
+                    if pressing { isHovered = true }
+                }
+            },
+            perform: {}
+        )
+        .onAppear {
+            withAnimation(.spring(response: 0.6, dampingFraction: 0.8).delay(animationDelay)) {
+                appeared = true
             }
         }
     }
@@ -170,6 +506,7 @@ struct HomeView: View {
 struct NoCreditsCard: View {
     let onPurchase: () -> Void
     @EnvironmentObject var localizationManager: LocalizationManager
+    @State private var shimmerPhase: CGFloat = -100
     
     var body: some View {
         HStack(spacing: ModernTheme.Spacing.md) {
@@ -194,143 +531,84 @@ struct NoCreditsCard: View {
                     .foregroundColor(.white)
                     .padding(.horizontal, ModernTheme.Spacing.md)
                     .padding(.vertical, ModernTheme.Spacing.sm)
-                    .background(ModernTheme.secondaryGradient)
+                    .background(
+                        ZStack {
+                            ModernTheme.secondaryGradient
+                            
+                            // Shimmer effect
+                            LinearGradient(
+                                colors: [
+                                    Color.clear,
+                                    Color.white.opacity(0.3),
+                                    Color.clear
+                                ],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                            .frame(width: 30)
+                            .offset(x: shimmerPhase)
+                            .mask(
+                                Capsule()
+                            )
+                        }
+                    )
                     .cornerRadius(ModernTheme.CornerRadius.full)
+                    .shadow(
+                        color: ModernTheme.Shadow.colored.color,
+                        radius: 8,
+                        x: 0,
+                        y: 4
+                    )
             }
         }
         .padding(ModernTheme.Spacing.lg)
         .background(
             RoundedRectangle(cornerRadius: ModernTheme.CornerRadius.large)
-                .fill(ModernTheme.secondary.opacity(0.1))
+                .fill(ModernTheme.secondary.opacity(0.05))
                 .overlay(
                     RoundedRectangle(cornerRadius: ModernTheme.CornerRadius.large)
                         .stroke(ModernTheme.secondary.opacity(0.2), lineWidth: 1)
                 )
         )
+        .onAppear {
+            withAnimation(.linear(duration: 2).repeatForever(autoreverses: false)) {
+                shimmerPhase = 200
+            }
+        }
     }
 }
 
-// MARK: - Welcome Section
-struct WelcomeSection: View {
-    @EnvironmentObject var localizationManager: LocalizationManager
-    
+// MARK: - Footer View
+struct FooterView: View {
     var body: some View {
-        VStack(spacing: ModernTheme.Spacing.md) {
-            // App Name with Icon
-            HStack(spacing: ModernTheme.Spacing.xs) {
-                Image(systemName: "leaf.fill")
-                    .font(.system(size: 36))
-                    .foregroundColor(ModernTheme.primary)
-                
-                Text(localized(.appName))
-                    .font(.system(size: 36, weight: .bold, design: .rounded))
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [ModernTheme.primary, ModernTheme.secondary],
-                            startPoint: .leading,
-                            endPoint: .trailing
+        VStack(spacing: ModernTheme.Spacing.xs) {
+            HStack(spacing: 4) {
+                ForEach(0..<3) { index in
+                    Circle()
+                        .fill(ModernTheme.secondary.opacity(0.3))
+                        .frame(width: 4, height: 4)
+                        .scaleEffect(1.5)
+                        .animation(
+                            Animation.easeInOut(duration: 1.5)
+                                .repeatForever()
+                                .delay(Double(index) * 0.3),
+                            value: true
                         )
-                    )
+                }
             }
             
-            // Welcome Text
-            VStack(spacing: ModernTheme.Spacing.xs) {
-                Text(localized(.welcomeTo))
-                    .font(ModernTheme.Typography.title2)
-                    .foregroundColor(ModernTheme.textPrimary)
-                
-                Text(localized(.sustainableStyleJourney))
-                    .font(ModernTheme.Typography.title)
-                    .fontWeight(.bold)
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [ModernTheme.primary, ModernTheme.secondary],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
-                    .multilineTextAlignment(.center)
-                
-                Text(localized(.ecoDescription))
-                    .font(ModernTheme.Typography.body)
-                    .foregroundColor(ModernTheme.textSecondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, ModernTheme.Spacing.xl)
-                    .padding(.top, ModernTheme.Spacing.xs)
-            }
+            Text(LocalizationManager.shared.string(for: .madeWithLove))
+                .font(ModernTheme.Typography.caption)
+                .foregroundColor(ModernTheme.textTertiary)
         }
     }
 }
 
-// MARK: - Minimal Feature Card
-struct MinimalFeatureCard: View {
-    @EnvironmentObject var localizationManager: LocalizationManager
-    let feature: AppFeature
-    let action: () -> Void
-    @State private var isPressed = false
-    
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: ModernTheme.Spacing.md) {
-                // Icon
-                ZStack {
-                    Circle()
-                        .fill(ModernTheme.primary.opacity(0.1))
-                        .frame(width: 56, height: 56)
-                    
-                    Image(systemName: feature.icon)
-                        .font(.system(size: 24, weight: .medium))
-                        .foregroundColor(ModernTheme.primary)
-                }
-                
-                // Content
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(localized(feature.titleKey))
-                        .font(ModernTheme.Typography.headline)
-                        .foregroundColor(ModernTheme.textPrimary)
-                    
-                    Text(localized(feature.descriptionKey))
-                        .font(ModernTheme.Typography.callout)
-                        .foregroundColor(ModernTheme.textSecondary)
-                        .lineLimit(2)
-                }
-                
-                Spacer()
-                
-                // Arrow
-                Image(systemName: "arrow.right.circle.fill")
-                    .font(.system(size: 28))
-                    .foregroundColor(ModernTheme.primary)
-                    .opacity(feature.isAvailable ? 1 : 0.5)
-            }
-            .padding(ModernTheme.Spacing.lg)
-            .background(
-                RoundedRectangle(cornerRadius: ModernTheme.CornerRadius.large)
-                    .fill(ModernTheme.surface)
-                    .shadow(
-                        color: ModernTheme.primary.opacity(0.08),
-                        radius: 8,
-                        x: 0,
-                        y: 4
-                    )
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: ModernTheme.CornerRadius.large)
-                    .stroke(ModernTheme.primary.opacity(0.1), lineWidth: 1)
-            )
-            .scaleEffect(isPressed ? 0.98 : 1.0)
-        }
-        .buttonStyle(PlainButtonStyle())
-        .disabled(!feature.isAvailable)
-        .scaleEffect(isPressed ? 0.98 : 1.0)
-        .onLongPressGesture(minimumDuration: .infinity, maximumDistance: .infinity,
-            pressing: { pressing in
-                withAnimation(.easeInOut(duration: 0.1)) {
-                    isPressed = pressing
-                }
-            },
-            perform: {}
-        )
+// MARK: - Supporting Types
+struct ScrollOffsetPreferenceKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = nextValue()
     }
 }
 

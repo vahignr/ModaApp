@@ -2,7 +2,7 @@
 //  LanguageButton.swift
 //  ModaApp
 //
-//  Reusable language switcher button component
+//  Luxury floating language switcher with animations
 //
 
 import SwiftUI
@@ -10,26 +10,72 @@ import SwiftUI
 struct LanguageButton: View {
     @EnvironmentObject var localizationManager: LocalizationManager
     @State private var showLanguageSheet = false
+    @State private var isPressed = false
+    @State private var rotation: Double = 0
     
     var body: some View {
         Button {
             showLanguageSheet = true
+            
+            // Haptic feedback
+            let impact = UIImpactFeedbackGenerator(style: .light)
+            impact.impactOccurred()
         } label: {
             ZStack {
+                // Glow effect
                 Circle()
-                    .fill(ModernTheme.primary)
+                    .fill(ModernTheme.secondary.opacity(0.3))
+                    .frame(width: 72, height: 72)
+                    .blur(radius: 20)
+                    .offset(y: 4)
+                
+                // Main button
+                Circle()
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                ModernTheme.primary,
+                                ModernTheme.primary.opacity(0.8),
+                                ModernTheme.secondary.opacity(0.5)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .frame(width: 56, height: 56)
                     .shadow(
-                        color: ModernTheme.primary.opacity(0.3),
-                        radius: 8,
+                        color: ModernTheme.Shadow.colored.color,
+                        radius: ModernTheme.Shadow.colored.radius,
                         x: 0,
-                        y: 4
+                        y: ModernTheme.Shadow.colored.y
                     )
                 
+                // Icon with rotation
                 Image(systemName: "globe")
-                    .font(.system(size: 24, weight: .medium))
+                    .font(.system(size: 26, weight: .medium))
                     .foregroundColor(.white)
+                    .rotationEffect(.degrees(rotation))
+                    .scaleEffect(isPressed ? 1.2 : 1.0)
             }
-            .frame(width: 56, height: 56)
+        }
+        .scaleEffect(isPressed ? 0.9 : 1.0)
+        .onLongPressGesture(
+            minimumDuration: .infinity,
+            maximumDistance: .infinity,
+            pressing: { pressing in
+                withAnimation(ModernTheme.springAnimation) {
+                    isPressed = pressing
+                }
+            },
+            perform: {}
+        )
+        .onAppear {
+            withAnimation(
+                .linear(duration: 20)
+                .repeatForever(autoreverses: false)
+            ) {
+                rotation = 360
+            }
         }
         .sheet(isPresented: $showLanguageSheet) {
             LanguageSelectionSheet(isPresented: $showLanguageSheet)
@@ -42,55 +88,101 @@ struct LanguageButton: View {
 struct LanguageSelectionSheet: View {
     @Binding var isPresented: Bool
     @EnvironmentObject var localizationManager: LocalizationManager
+    @State private var selectedLanguage: Language?
     
     var body: some View {
         NavigationView {
-            VStack(spacing: 0) {
-                // Header
-                VStack(spacing: ModernTheme.Spacing.xs) {
-                    Image(systemName: "globe")
-                        .font(.system(size: 40))
-                        .foregroundColor(ModernTheme.primary)
-                        .padding(.top, ModernTheme.Spacing.xl)
-                    
-                    Text(localized(.language))
-                        .font(ModernTheme.Typography.title2)
-                        .foregroundColor(ModernTheme.textPrimary)
-                        .padding(.bottom, ModernTheme.Spacing.lg)
-                }
+            ZStack {
+                // Background gradient
+                ModernTheme.background
+                    .ignoresSafeArea()
                 
-                // Language Options
-                VStack(spacing: ModernTheme.Spacing.md) {
-                    ForEach(Language.allCases, id: \.self) { language in
-                        LanguageOptionRow(
-                            language: language,
-                            isSelected: language == localizationManager.currentLanguage,
-                            action: {
-                                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                                    localizationManager.switchLanguage(to: language)
-                                    // Small delay to show the selection animation
-                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                LinearGradient(
+                    colors: [
+                        ModernTheme.secondary.opacity(0.05),
+                        ModernTheme.background
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .ignoresSafeArea()
+                
+                VStack(spacing: 0) {
+                    // Header with animation
+                    VStack(spacing: ModernTheme.Spacing.md) {
+                        ZStack {
+                            Circle()
+                                .fill(ModernTheme.radialBlushGradient)
+                                .frame(width: 100, height: 100)
+                                .blur(radius: 20)
+                            
+                            Image(systemName: "globe")
+                                .font(.system(size: 50, weight: .light))
+                                .foregroundColor(ModernTheme.primary)
+                                .symbolEffect(.pulse)
+                        }
+                        .padding(.top, ModernTheme.Spacing.xl)
+                        
+                        Text(localized(.language))
+                            .font(ModernTheme.Typography.title2)
+                            .foregroundColor(ModernTheme.textPrimary)
+                            .padding(.bottom, ModernTheme.Spacing.lg)
+                    }
+                    
+                    // Language Options with staggered animation
+                    VStack(spacing: ModernTheme.Spacing.md) {
+                        ForEach(Array(Language.allCases.enumerated()), id: \.element) { index, language in
+                            LanguageOptionRow(
+                                language: language,
+                                isSelected: language == localizationManager.currentLanguage,
+                                action: {
+                                    selectedLanguage = language
+                                    
+                                    withAnimation(ModernTheme.springAnimation) {
+                                        localizationManager.switchLanguage(to: language)
+                                    }
+                                    
+                                    // Haptic feedback
+                                    let impact = UIImpactFeedbackGenerator(style: .light)
+                                    impact.impactOccurred()
+                                    
+                                    // Dismiss after animation
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                                         isPresented = false
                                     }
                                 }
-                            }
-                        )
+                            )
+                            .transition(.asymmetric(
+                                insertion: .slide.combined(with: .opacity),
+                                removal: .scale.combined(with: .opacity)
+                            ))
+                            .animation(
+                                .spring(response: 0.5, dampingFraction: 0.8)
+                                .delay(Double(index) * 0.1),
+                                value: isPresented
+                            )
+                        }
                     }
+                    .padding(.horizontal)
+                    
+                    Spacer()
                 }
-                .padding(.horizontal)
-                
-                Spacer()
             }
-            .background(ModernTheme.background)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
                         isPresented = false
                     } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .font(.system(size: 24))
-                            .foregroundColor(ModernTheme.textTertiary)
+                        ZStack {
+                            Circle()
+                                .fill(ModernTheme.glassWhite)
+                                .frame(width: 32, height: 32)
+                            
+                            Image(systemName: "xmark")
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundColor(ModernTheme.textSecondary)
+                        }
                     }
                 }
             }
@@ -108,19 +200,27 @@ struct LanguageOptionRow: View {
     var body: some View {
         Button(action: action) {
             HStack(spacing: ModernTheme.Spacing.md) {
-                // Flag or Language Icon
+                // Language Icon with gradient
                 ZStack {
                     Circle()
-                        .fill(isSelected ? ModernTheme.primary.opacity(0.2) : ModernTheme.lightSage)
-                        .frame(width: 50, height: 50)
+                        .fill(
+                            isSelected ?
+                            ModernTheme.secondaryGradient :
+                            LinearGradient(
+                                colors: [ModernTheme.lightBlush, ModernTheme.accent],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 56, height: 56)
                     
                     Text(language == .english ? "EN" : "TR")
                         .font(ModernTheme.Typography.headline)
                         .fontWeight(.bold)
-                        .foregroundColor(isSelected ? ModernTheme.primary : ModernTheme.textSecondary)
+                        .foregroundColor(isSelected ? .white : ModernTheme.primary)
                 }
                 
-                // Language Name
+                // Language Details
                 VStack(alignment: .leading, spacing: 4) {
                     Text(language.displayName)
                         .font(ModernTheme.Typography.headline)
@@ -133,126 +233,59 @@ struct LanguageOptionRow: View {
                 
                 Spacer()
                 
-                // Checkmark
+                // Animated Checkmark
                 if isSelected {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 28))
-                        .foregroundColor(ModernTheme.primary)
-                        .transition(.scale.combined(with: .opacity))
+                    ZStack {
+                        Circle()
+                            .fill(ModernTheme.success.opacity(0.1))
+                            .frame(width: 32, height: 32)
+                        
+                        Image(systemName: "checkmark")
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundColor(ModernTheme.success)
+                    }
+                    .transition(.scale.combined(with: .opacity))
                 }
             }
             .padding(ModernTheme.Spacing.md)
             .background(
                 RoundedRectangle(cornerRadius: ModernTheme.CornerRadius.large)
-                    .fill(isSelected ? ModernTheme.primary.opacity(0.1) : ModernTheme.surface)
+                    .fill(isSelected ? ModernTheme.glassWhite : ModernTheme.surface)
+                    .background(
+                        isSelected ? AnyView(
+                            RoundedRectangle(cornerRadius: ModernTheme.CornerRadius.large)
+                                .fill(.ultraThinMaterial)
+                        ) : AnyView(Color.clear)
+                    )
             )
             .overlay(
                 RoundedRectangle(cornerRadius: ModernTheme.CornerRadius.large)
-                    .stroke(isSelected ? ModernTheme.primary : Color.clear, lineWidth: 2)
+                    .stroke(
+                        isSelected ?
+                        ModernTheme.secondaryGradient :
+                        LinearGradient(colors: [Color.clear], startPoint: .leading, endPoint: .trailing),
+                        lineWidth: 2
+                    )
             )
             .shadow(
-                color: isSelected ? ModernTheme.primary.opacity(0.1) : ModernTheme.Shadow.small.color,
-                radius: isSelected ? 8 : ModernTheme.Shadow.small.radius,
+                color: isSelected ? ModernTheme.Shadow.medium.color : ModernTheme.Shadow.small.color,
+                radius: isSelected ? ModernTheme.Shadow.medium.radius : ModernTheme.Shadow.small.radius,
                 x: 0,
-                y: isSelected ? 4 : ModernTheme.Shadow.small.y
+                y: isSelected ? ModernTheme.Shadow.medium.y : ModernTheme.Shadow.small.y
             )
             .scaleEffect(isPressed ? 0.98 : 1.0)
         }
         .buttonStyle(PlainButtonStyle())
-        .scaleEffect(isPressed ? 0.98 : 1.0)
-        .onLongPressGesture(minimumDuration: .infinity, maximumDistance: .infinity,
+        .onLongPressGesture(
+            minimumDuration: .infinity,
+            maximumDistance: .infinity,
             pressing: { pressing in
-                withAnimation(.easeInOut(duration: 0.1)) {
+                withAnimation(ModernTheme.springAnimation) {
                     isPressed = pressing
                 }
             },
             perform: {}
         )
-    }
-}
-
-// MARK: - Alternative Compact Menu (if you prefer a smaller presentation)
-struct LanguageCompactMenu: View {
-    @EnvironmentObject var localizationManager: LocalizationManager
-    @State private var showMenu = false
-    
-    var body: some View {
-        VStack(alignment: .trailing, spacing: ModernTheme.Spacing.sm) {
-            // Language Options (shown when menu is expanded)
-            if showMenu {
-                VStack(alignment: .trailing, spacing: ModernTheme.Spacing.xs) {
-                    ForEach(Language.allCases, id: \.self) { language in
-                        Button {
-                            withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                                localizationManager.switchLanguage(to: language)
-                                showMenu = false
-                            }
-                        } label: {
-                            HStack(spacing: ModernTheme.Spacing.sm) {
-                                Text(language.displayName)
-                                    .font(ModernTheme.Typography.body)
-                                    .fontWeight(language == localizationManager.currentLanguage ? .semibold : .regular)
-                                
-                                if language == localizationManager.currentLanguage {
-                                    Image(systemName: "checkmark")
-                                        .font(.system(size: 14, weight: .bold))
-                                }
-                            }
-                            .foregroundColor(ModernTheme.textPrimary)
-                            .padding(.horizontal, ModernTheme.Spacing.md)
-                            .padding(.vertical, ModernTheme.Spacing.sm)
-                            .background(
-                                Capsule()
-                                    .fill(language == localizationManager.currentLanguage ?
-                                         ModernTheme.primary.opacity(0.2) : ModernTheme.surface)
-                                    .shadow(
-                                        color: ModernTheme.Shadow.small.color,
-                                        radius: ModernTheme.Shadow.small.radius,
-                                        x: ModernTheme.Shadow.small.x,
-                                        y: ModernTheme.Shadow.small.y
-                                    )
-                            )
-                        }
-                        .transition(.asymmetric(
-                            insertion: .scale(scale: 0.8, anchor: .bottomTrailing).combined(with: .opacity),
-                            removal: .scale(scale: 0.8, anchor: .bottomTrailing).combined(with: .opacity)
-                        ))
-                    }
-                }
-            }
-            
-            // Main Globe Button
-            Button {
-                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                    showMenu.toggle()
-                }
-            } label: {
-                ZStack {
-                    Circle()
-                        .fill(ModernTheme.primary)
-                        .shadow(
-                            color: ModernTheme.primary.opacity(0.3),
-                            radius: 8,
-                            x: 0,
-                            y: 4
-                        )
-                    
-                    Image(systemName: showMenu ? "xmark" : "globe")
-                        .font(.system(size: 24, weight: .medium))
-                        .foregroundColor(.white)
-                        .rotationEffect(.degrees(showMenu ? 90 : 0))
-                }
-                .frame(width: 56, height: 56)
-            }
-        }
-        .onTapGesture {
-            // Dismiss menu when tapping outside
-            if showMenu {
-                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                    showMenu = false
-                }
-            }
-        }
     }
 }
 
@@ -265,22 +298,9 @@ struct LanguageCompactMenu: View {
         VStack {
             Spacer()
             
-            Text("Sheet Style")
-                .font(ModernTheme.Typography.caption)
-                .foregroundColor(ModernTheme.textTertiary)
-            
-            LanguageButton()
-            
-            Spacer()
-                .frame(height: 100)
-            
-            Text("Compact Menu Style")
-                .font(ModernTheme.Typography.caption)
-                .foregroundColor(ModernTheme.textTertiary)
-            
             HStack {
                 Spacer()
-                LanguageCompactMenu()
+                LanguageButton()
                     .padding()
             }
         }
