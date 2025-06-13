@@ -9,6 +9,8 @@ struct OccasionSelector: View {
     @EnvironmentObject var localizationManager: LocalizationManager
     @State private var hoveredOccasion: Occasion?
     @State private var hoveredTone: TonePersona?
+    @State private var calendarScale: CGFloat = 1.0
+    @State private var personScale: CGFloat = 1.0
     
     var body: some View {
         VStack(spacing: ModernTheme.Spacing.xl) {
@@ -22,7 +24,7 @@ struct OccasionSelector: View {
                                 Image(systemName: "calendar")
                                     .font(.system(size: 24))
                                     .foregroundStyle(ModernTheme.primaryGradient)
-                                    .symbolEffect(.bounce, value: selectedOccasion)
+                                    .scaleEffect(calendarScale)
                                 
                                 Text(localized(.selectTheOccasion))
                                     .font(ModernTheme.Typography.title2)
@@ -34,6 +36,14 @@ struct OccasionSelector: View {
                                 .foregroundColor(ModernTheme.textSecondary)
                         }
                         .padding(.horizontal)
+                        .onChange(of: selectedOccasion) { _ in
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.5)) {
+                                calendarScale = 1.2
+                            }
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.7).delay(0.1)) {
+                                calendarScale = 1.0
+                            }
+                        }
                         
                         // Occasion Grid with 3D effects
                         LazyVGrid(columns: [
@@ -117,7 +127,7 @@ struct OccasionSelector: View {
                                 Image(systemName: "person.fill.viewfinder")
                                     .font(.system(size: 24))
                                     .foregroundStyle(ModernTheme.secondaryGradient)
-                                    .symbolEffect(.pulse, value: selectedTone)
+                                    .scaleEffect(personScale)
                                 
                                 Text(localized(.selectVoiceTone))
                                     .font(ModernTheme.Typography.title2)
@@ -129,6 +139,11 @@ struct OccasionSelector: View {
                                 .foregroundColor(ModernTheme.textSecondary)
                         }
                         .padding(.horizontal)
+                        .onAppear {
+                            withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {
+                                personScale = 1.1
+                            }
+                        }
                         
                         // Tone Grid with personality animations
                         LazyVGrid(columns: [
@@ -377,9 +392,9 @@ struct AnimatedToneCard: View {
                                 .scaleEffect(glowAnimation ? 1.2 : 1.0)
                                 .opacity(glowAnimation ? 0 : 1)
                                 .animation(
-                                    .easeOut(duration: 2)
-                                    .repeatForever(autoreverses: false)
-                                    .delay(Double(index) * 0.3),
+                                    Animation.easeOut(duration: 2)
+                                        .repeatForever(autoreverses: false)
+                                        .delay(Double(index) * 0.3),
                                     value: glowAnimation
                                 )
                         }
@@ -413,10 +428,6 @@ struct AnimatedToneCard: View {
                         .foregroundColor(isSelected ? .white : ModernTheme.secondary)
                         .rotationEffect(.degrees(iconAnimation ? 360 : 0))
                         .scaleEffect(isHovered ? 1.15 : 1.0)
-                        .symbolEffect(
-                            tone.icon == "sparkles" ? .variableColor.iterative : .bounce,
-                            value: isHovered
-                        )
                 }
                 .scaleEffect(isPressed ? 0.9 : 1.0)
                 

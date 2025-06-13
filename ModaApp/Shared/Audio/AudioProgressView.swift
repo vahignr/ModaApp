@@ -2,8 +2,7 @@
 //  AudioProgressView.swift
 //  ModaApp
 //
-//  Created by Vahi Guner on 6/3/25.
-//  Updated with ModernTheme styling
+//  Audio progress view with luxury midnight theme styling
 //
 
 import SwiftUI
@@ -22,18 +21,18 @@ struct AudioProgressView: View {
                 ZStack(alignment: .leading) {
                     // Background track
                     RoundedRectangle(cornerRadius: 4)
-                        .fill(ModernTheme.tertiary.opacity(0.3))
+                        .fill(ModernTheme.platinum.opacity(0.3))
                         .frame(height: 6)
                     
-                    // Progress track
+                    // Progress track with luxury gradient
                     RoundedRectangle(cornerRadius: 4)
-                        .fill(ModernTheme.sageGradient)
+                        .fill(ModernTheme.secondaryGradient)
                         .frame(
                             width: geometry.size.width * CGFloat(isDragging ? dragValue : currentProgress),
                             height: 6
                         )
                     
-                    // Draggable thumb
+                    // Draggable thumb with rose gold accent
                     Circle()
                         .fill(ModernTheme.surface)
                         .frame(width: 20, height: 20)
@@ -45,7 +44,13 @@ struct AudioProgressView: View {
                         )
                         .overlay(
                             Circle()
-                                .fill(ModernTheme.primary)
+                                .fill(
+                                    LinearGradient(
+                                        colors: [ModernTheme.secondary, ModernTheme.tertiary],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                )
                                 .frame(width: 12, height: 12)
                         )
                         .offset(x: thumbPosition(in: geometry.size.width))

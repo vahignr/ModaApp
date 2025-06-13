@@ -258,16 +258,26 @@ struct StepCircle: View {
                         )
                 }
                 
-                // Main circle
-                Circle()
-                    .fill(isActive ? ModernTheme.primaryGradient : Color(ModernTheme.platinum))
-                    .frame(width: 40, height: 40)
-                    .shadow(
-                        color: isActive ? ModernTheme.Shadow.colored.color : Color.clear,
-                        radius: 8,
-                        x: 0,
-                        y: 4
-                    )
+                // Main circle - using different approach to avoid type mismatch
+                if isActive {
+                    Circle()
+                        .fill(ModernTheme.primaryGradient)
+                        .frame(width: 40, height: 40)
+                        .shadow(
+                            color: ModernTheme.Shadow.colored.color,
+                            radius: 8,
+                            x: 0,
+                            y: 4
+                        )
+                } else {
+                    Circle()
+                        .fill(LinearGradient(
+                            colors: [ModernTheme.platinum],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        ))
+                        .frame(width: 40, height: 40)
+                }
                 
                 // Icon
                 Image(systemName: step.1)
@@ -391,6 +401,7 @@ struct ImageSelectionView: View {
 struct EmptyImageState: View {
     @Binding var selectedImage: UIImage?
     @State private var iconBounce = false
+    @State private var iconScale: CGFloat = 1.0
     
     var body: some View {
         VStack(spacing: ModernTheme.Spacing.xl) {
@@ -419,11 +430,14 @@ struct EmptyImageState: View {
                         Image(systemName: "camera.macro")
                             .font(.system(size: 50))
                             .foregroundStyle(ModernTheme.primaryGradient)
-                            .symbolEffect(.bounce, value: iconBounce)
+                            .scaleEffect(iconScale)
                     )
             }
             .onAppear {
                 iconBounce = true
+                withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {
+                    iconScale = 1.1
+                }
             }
             
             Text(localized(.selectYourOutfitPhoto))
@@ -459,6 +473,7 @@ struct OccasionSelectionView: View {
     @State private var showPurchaseView = false
     @EnvironmentObject var creditsManager: CreditsManager
     @EnvironmentObject var localizationManager: LocalizationManager
+    @State private var sparkleScale: CGFloat = 1.0
     
     var body: some View {
         VStack(spacing: ModernTheme.Spacing.lg) {
@@ -500,7 +515,7 @@ struct OccasionSelectionView: View {
                         Text(localized(.analyzeStyle))
                             .fontWeight(.semibold)
                         Image(systemName: "sparkles")
-                            .symbolEffect(.variableColor.iterative, value: vm.canAnalyze)
+                            .scaleEffect(sparkleScale)
                     }
                     .font(ModernTheme.Typography.body)
                     .foregroundColor(.white)
@@ -508,9 +523,11 @@ struct OccasionSelectionView: View {
                     .padding(.vertical, ModernTheme.Spacing.sm)
                     .background(
                         Capsule()
-                            .fill(vm.canAnalyze && vm.hasCredits ?
+                            .fill(
+                                vm.canAnalyze && vm.hasCredits ?
                                 ModernTheme.primaryGradient :
-                                LinearGradient(colors: [Color.gray], startPoint: .leading, endPoint: .trailing))
+                                LinearGradient(colors: [Color.gray], startPoint: .leading, endPoint: .trailing)
+                            )
                     )
                     .shadow(
                         color: vm.canAnalyze && vm.hasCredits ? ModernTheme.Shadow.colored.color : Color.clear,
@@ -520,6 +537,15 @@ struct OccasionSelectionView: View {
                     )
                 }
                 .disabled(!vm.canAnalyze || !vm.hasCredits)
+                .onChange(of: vm.canAnalyze) { newValue in
+                    if newValue {
+                        withAnimation(.easeInOut(duration: 0.5).repeatForever(autoreverses: true)) {
+                            sparkleScale = 1.2
+                        }
+                    } else {
+                        sparkleScale = 1.0
+                    }
+                }
             }
             .padding(.horizontal, ModernTheme.Spacing.lg)
             
@@ -543,6 +569,8 @@ struct AnalyzingView: View {
     @State private var dots = 0
     @State private var rotation = 0.0
     @State private var particlePositions: [CGPoint] = []
+    @State private var sparkleScale: CGFloat = 1.0
+    @State private var sparkleOpacity: Double = 0.7
     
     var body: some View {
         VStack(spacing: ModernTheme.Spacing.xl) {
@@ -579,7 +607,8 @@ struct AnalyzingView: View {
                     Image(systemName: "sparkles")
                         .font(.system(size: 50))
                         .foregroundStyle(ModernTheme.primaryGradient)
-                        .symbolEffect(.variableColor.iterative.dimInactiveLayers, value: rotation)
+                        .scaleEffect(sparkleScale)
+                        .opacity(sparkleOpacity)
                 }
                 .shadow(
                     color: ModernTheme.Shadow.large.color,
@@ -591,6 +620,11 @@ struct AnalyzingView: View {
             .onAppear {
                 withAnimation(.linear(duration: 3).repeatForever(autoreverses: false)) {
                     rotation = 360
+                }
+                
+                withAnimation(.easeInOut(duration: 1).repeatForever(autoreverses: true)) {
+                    sparkleScale = 1.2
+                    sparkleOpacity = 1.0
                 }
             }
             

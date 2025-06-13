@@ -156,6 +156,8 @@ struct LuxuryCommentCard: View {
     let audioURL: URL?
     @Binding var isExpanded: Bool
     @State private var shimmerPhase: CGFloat = -100
+    @State private var sparkleRotation: Double = 0
+    @State private var sparkleOpacity: Double = 0.7
     
     var body: some View {
         VStack(spacing: ModernTheme.Spacing.md) {
@@ -172,7 +174,8 @@ struct LuxuryCommentCard: View {
                     Image(systemName: "sparkles")
                         .font(.system(size: 22, weight: .medium))
                         .foregroundStyle(ModernTheme.primaryGradient)
-                        .symbolEffect(.variableColor.iterative.dimInactiveLayers, value: isExpanded)
+                        .rotationEffect(.degrees(sparkleRotation))
+                        .opacity(sparkleOpacity)
                 }
                 
                 Text(localized(.aiStylistAnalysis))
@@ -259,6 +262,19 @@ struct LuxuryCommentCard: View {
         .onAppear {
             withAnimation(.linear(duration: 3).repeatForever(autoreverses: false)) {
                 shimmerPhase = 300
+            }
+            
+            // Sparkle animation for iOS 16
+            withAnimation(.easeInOut(duration: 2).repeatForever(autoreverses: true)) {
+                sparkleRotation = 15
+                sparkleOpacity = 1.0
+            }
+        }
+        .onChange(of: isExpanded) { newValue in
+            if newValue {
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    sparkleRotation = -15
+                }
             }
         }
     }
@@ -724,6 +740,7 @@ struct LuxuryImageThumbnail: View {
 struct CustomTabBar: View {
     @Binding var selectedTab: Int
     @State private var animatedTab = 0
+    @State private var iconScales: [CGFloat] = [1.0, 1.0]
     
     private let tabs = [
         (icon: "doc.text.fill", title: LocalizedStringKey.aiStylistAnalysis),
@@ -741,7 +758,7 @@ struct CustomTabBar: View {
                     VStack(spacing: 6) {
                         Image(systemName: tab.icon)
                             .font(.system(size: 20, weight: .medium))
-                            .symbolEffect(.bounce, value: selectedTab == index)
+                            .scaleEffect(iconScales[index])
                         
                         Text(LocalizationManager.shared.string(for: tab.title))
                             .font(ModernTheme.Typography.caption)
@@ -778,6 +795,15 @@ struct CustomTabBar: View {
             x: 0,
             y: ModernTheme.Shadow.small.y
         )
+        .onChange(of: selectedTab) { newValue in
+            // Bounce animation for selected tab
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.5)) {
+                iconScales[newValue] = 1.2
+            }
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.7).delay(0.1)) {
+                iconScales[newValue] = 1.0
+            }
+        }
     }
 }
 

@@ -89,6 +89,7 @@ struct LanguageSelectionSheet: View {
     @Binding var isPresented: Bool
     @EnvironmentObject var localizationManager: LocalizationManager
     @State private var selectedLanguage: Language?
+    @State private var iconScale: CGFloat = 1.0
     
     var body: some View {
         NavigationView {
@@ -119,7 +120,15 @@ struct LanguageSelectionSheet: View {
                             Image(systemName: "globe")
                                 .font(.system(size: 50, weight: .light))
                                 .foregroundColor(ModernTheme.primary)
-                                .symbolEffect(.pulse)
+                                .scaleEffect(iconScale)
+                                .onAppear {
+                                    withAnimation(
+                                        .easeInOut(duration: 1.5)
+                                        .repeatForever(autoreverses: true)
+                                    ) {
+                                        iconScale = 1.1
+                                    }
+                                }
                         }
                         .padding(.top, ModernTheme.Spacing.xl)
                         
@@ -146,46 +155,38 @@ struct LanguageSelectionSheet: View {
                                     let impact = UIImpactFeedbackGenerator(style: .light)
                                     impact.impactOccurred()
                                     
-                                    // Dismiss after animation
-                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                    // Close sheet after selection
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                                         isPresented = false
                                     }
-                                }
-                            )
-                            .transition(.asymmetric(
-                                insertion: .slide.combined(with: .opacity),
-                                removal: .scale.combined(with: .opacity)
-                            ))
-                            .animation(
-                                .spring(response: 0.5, dampingFraction: 0.8)
-                                .delay(Double(index) * 0.1),
-                                value: isPresented
+                                },
+                                animationDelay: Double(index) * 0.1
                             )
                         }
                     }
-                    .padding(.horizontal)
+                    .padding(.horizontal, ModernTheme.Spacing.xl)
+                    .padding(.top, ModernTheme.Spacing.lg)
                     
                     Spacer()
-                }
-            }
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
+                    
+                    // Close button
                     Button {
                         isPresented = false
                     } label: {
-                        ZStack {
-                            Circle()
-                                .fill(ModernTheme.glassWhite)
-                                .frame(width: 32, height: 32)
-                            
-                            Image(systemName: "xmark")
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundColor(ModernTheme.textSecondary)
-                        }
+                        Text(localized(.close))
+                            .font(ModernTheme.Typography.body)
+                            .foregroundColor(ModernTheme.textSecondary)
+                            .padding(.vertical, ModernTheme.Spacing.sm)
+                            .padding(.horizontal, ModernTheme.Spacing.xl)
+                            .background(
+                                Capsule()
+                                    .stroke(ModernTheme.textTertiary.opacity(0.3), lineWidth: 1)
+                            )
                     }
+                    .padding(.bottom, ModernTheme.Spacing.xxl)
                 }
             }
+            .navigationBarHidden(true)
         }
     }
 }
@@ -195,85 +196,80 @@ struct LanguageOptionRow: View {
     let language: Language
     let isSelected: Bool
     let action: () -> Void
+    let animationDelay: Double
+    
+    @State private var appeared = false
     @State private var isPressed = false
     
     var body: some View {
         Button(action: action) {
             HStack(spacing: ModernTheme.Spacing.md) {
-                // Language Icon with gradient
+                // Language icon
                 ZStack {
                     Circle()
                         .fill(
                             isSelected ?
-                            ModernTheme.secondaryGradient :
+                            ModernTheme.primaryGradient :
                             LinearGradient(
-                                colors: [ModernTheme.lightBlush, ModernTheme.accent],
+                                colors: [ModernTheme.lightBlush, ModernTheme.accent.opacity(0.5)],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             )
                         )
                         .frame(width: 56, height: 56)
                     
-                    Text(language == .english ? "EN" : "TR")
-                        .font(ModernTheme.Typography.headline)
-                        .fontWeight(.bold)
-                        .foregroundColor(isSelected ? .white : ModernTheme.primary)
+                    Text(flagEmoji(for: language))
+                        .font(.system(size: 28))
                 }
                 
-                // Language Details
+                // Language name
                 VStack(alignment: .leading, spacing: 4) {
                     Text(language.displayName)
                         .font(ModernTheme.Typography.headline)
-                        .foregroundColor(ModernTheme.textPrimary)
+                        .foregroundColor(isSelected ? ModernTheme.primary : ModernTheme.textPrimary)
                     
-                    Text(language == .english ? "English Language" : "Türk Dili")
+                    Text(nativeName(for: language))
                         .font(ModernTheme.Typography.caption)
                         .foregroundColor(ModernTheme.textSecondary)
                 }
                 
                 Spacer()
                 
-                // Animated Checkmark
+                // Selection indicator
                 if isSelected {
-                    ZStack {
-                        Circle()
-                            .fill(ModernTheme.success.opacity(0.1))
-                            .frame(width: 32, height: 32)
-                        
-                        Image(systemName: "checkmark")
-                            .font(.system(size: 16, weight: .bold))
-                            .foregroundColor(ModernTheme.success)
-                    }
-                    .transition(.scale.combined(with: .opacity))
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 24))
+                        .foregroundStyle(ModernTheme.primaryGradient)
+                        .transition(.scale.combined(with: .opacity))
                 }
             }
             .padding(ModernTheme.Spacing.md)
             .background(
                 RoundedRectangle(cornerRadius: ModernTheme.CornerRadius.large)
-                    .fill(isSelected ? ModernTheme.glassWhite : ModernTheme.surface)
-                    .background(
-                        isSelected ? AnyView(
-                            RoundedRectangle(cornerRadius: ModernTheme.CornerRadius.large)
-                                .fill(.ultraThinMaterial)
-                        ) : AnyView(Color.clear)
+                    .fill(
+                        isSelected ?
+                        ModernTheme.primary.opacity(0.08) :
+                        ModernTheme.surface
                     )
             )
             .overlay(
                 RoundedRectangle(cornerRadius: ModernTheme.CornerRadius.large)
                     .stroke(
                         isSelected ?
-                        ModernTheme.secondaryGradient :
-                        LinearGradient(colors: [Color.clear], startPoint: .leading, endPoint: .trailing),
-                        lineWidth: 2
+                        ModernTheme.primary.opacity(0.3) :
+                        ModernTheme.glassBorder,
+                        lineWidth: isSelected ? 2 : 1
                     )
             )
             .shadow(
-                color: isSelected ? ModernTheme.Shadow.medium.color : ModernTheme.Shadow.small.color,
-                radius: isSelected ? ModernTheme.Shadow.medium.radius : ModernTheme.Shadow.small.radius,
+                color: isSelected ? ModernTheme.Shadow.colored.color : ModernTheme.Shadow.small.color,
+                radius: isSelected ? 8 : ModernTheme.Shadow.small.radius,
                 x: 0,
-                y: isSelected ? ModernTheme.Shadow.medium.y : ModernTheme.Shadow.small.y
+                y: isSelected ? 4 : ModernTheme.Shadow.small.y
             )
             .scaleEffect(isPressed ? 0.98 : 1.0)
+            .offset(x: appeared ? 0 : -50)
+            .opacity(appeared ? 1 : 0)
         }
         .buttonStyle(PlainButtonStyle())
         .onLongPressGesture(
@@ -286,24 +282,41 @@ struct LanguageOptionRow: View {
             },
             perform: {}
         )
+        .onAppear {
+            withAnimation(
+                .spring(response: 0.6, dampingFraction: 0.7)
+                .delay(animationDelay)
+            ) {
+                appeared = true
+            }
+        }
+    }
+    
+    private func flagEmoji(for language: Language) -> String {
+        switch language {
+        case .english: return "🇺🇸"
+        case .turkish: return "🇹🇷"
+        }
+    }
+    
+    private func nativeName(for language: Language) -> String {
+        switch language {
+        case .english: return "English (US)"
+        case .turkish: return "Türkçe"
+        }
     }
 }
 
 // MARK: - Preview
 #Preview {
-    ZStack {
-        ModernTheme.background
-            .ignoresSafeArea()
-        
-        VStack {
+    VStack {
+        Spacer()
+        HStack {
             Spacer()
-            
-            HStack {
-                Spacer()
-                LanguageButton()
-                    .padding()
-            }
+            LanguageButton()
+                .environmentObject(LocalizationManager.shared)
         }
+        .padding()
     }
-    .environmentObject(LocalizationManager.shared)
+    .background(ModernTheme.background)
 }
