@@ -50,7 +50,7 @@ struct ContentView: View {
                                     .transition(.luxurySlide)
                                 
                             case .selectOccasion:
-                                OccasionSelectionView(vm: vm, currentStep: $currentStep)
+                                OccasionSelector(vm: vm, currentStep: $currentStep)
                                     .transition(.luxurySlide)
                                 
                             case .analyzing:
