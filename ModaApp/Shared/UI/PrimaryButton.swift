@@ -3,7 +3,7 @@
 //  ModaApp
 //
 //  Created by Vahi Guner on 6/3/25.
-//  Updated to use ModernTheme
+//  Updated to use Luxury Typography with elegant animations
 //
 
 import SwiftUI
@@ -23,6 +23,10 @@ struct PrimaryButton: View {
         case text
     }
     
+    // MARK: - State for luxury animations
+    @State private var isPressed = false
+    @State private var shimmerOffset: CGFloat = -200
+    
     // MARK: - Initializers ----------------------------------------------------
     
     init(title: String,
@@ -38,15 +42,18 @@ struct PrimaryButton: View {
     // MARK: - View ------------------------------------------------------------
     
     var body: some View {
-        HStack(spacing: ModernTheme.Spacing.xs) {
+        HStack(spacing: ModernTheme.Spacing.sm) {
             if let systemImage {
                 Image(systemName: systemImage)
-                    .font(.system(size: 18, weight: .medium))
+                    .font(.system(size: 20, weight: .medium))
+                    .scaleEffect(isPressed ? 0.9 : 1.0)
+                    .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isPressed)
             }
-            Text(title)
-                .fontWeight(.semibold)
+            Text(title.uppercased()) // Uppercase for luxury feel
+                .tracking(style == .primary ? 1.5 : 1.0) // Letter spacing
+                .fontWeight(style == .primary ? .semibold : .medium)
         }
-        .font(ModernTheme.Typography.headline)
+        .font(ModernTheme.Typography.buttonText)
         .padding(.vertical, ModernTheme.Spacing.md)
         .frame(maxWidth: .infinity)
         .foregroundStyle(foregroundColor)
@@ -59,8 +66,24 @@ struct PrimaryButton: View {
             y: shadowY
         )
         .opacity(enabled ? 1 : 0.6)
-        .scaleEffect(enabled ? 1.0 : 0.98)
+        .scaleEffect(enabled && !isPressed ? 1.0 : 0.98)
         .animation(.spring(response: 0.3, dampingFraction: 0.7), value: enabled)
+        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isPressed)
+        .onLongPressGesture(minimumDuration: .infinity, maximumDistance: .infinity,
+            pressing: { pressing in
+                withAnimation(.easeInOut(duration: 0.1)) {
+                    isPressed = pressing
+                }
+            },
+            perform: {}
+        )
+        .onAppear {
+            if style == .primary && enabled {
+                withAnimation(.linear(duration: 3).repeatForever(autoreverses: false)) {
+                    shimmerOffset = 200
+                }
+            }
+        }
     }
     
     // MARK: - Computed Properties ---------------------------------------------
@@ -81,14 +104,62 @@ struct PrimaryButton: View {
         switch style {
         case .primary:
             if enabled {
-                ModernTheme.primaryGradient
+                ZStack {
+                    ModernTheme.primaryGradient
+                    
+                    // Shimmer effect for luxury feel
+                    LinearGradient(
+                        colors: [
+                            Color.white.opacity(0),
+                            Color.white.opacity(0.3),
+                            Color.white.opacity(0)
+                        ],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                    .frame(width: 100)
+                    .offset(x: shimmerOffset)
+                    .mask(
+                        RoundedRectangle(cornerRadius: ModernTheme.CornerRadius.full)
+                    )
+                }
+                .overlay(
+                    RoundedRectangle(cornerRadius: ModernTheme.CornerRadius.full)
+                        .stroke(
+                            LinearGradient(
+                                colors: [
+                                    Color.white.opacity(0.3),
+                                    Color.white.opacity(0.1)
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ),
+                            lineWidth: 0.5
+                        )
+                )
             } else {
-                ModernTheme.textTertiary.opacity(0.3)
+                Color.white.opacity(0.1)
             }
         case .secondary:
             Capsule()
-                .stroke(enabled ? ModernTheme.primary : ModernTheme.textTertiary, lineWidth: 2)
-                .background(Color.clear)
+                .stroke(
+                    enabled ?
+                    LinearGradient(
+                        colors: [ModernTheme.primary, ModernTheme.secondary],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    ) :
+                    LinearGradient(
+                        colors: [ModernTheme.textTertiary],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    ),
+                    lineWidth: 2
+                )
+                .background(
+                    Capsule()
+                        .fill(enabled ? ModernTheme.primary.opacity(0.1) : Color.clear)
+                )
         case .text:
             Color.clear
         }
@@ -99,7 +170,7 @@ struct PrimaryButton: View {
         
         switch style {
         case .primary:
-            return ModernTheme.primary.opacity(0.3)
+            return ModernTheme.primary.opacity(0.5)
         case .secondary, .text:
             return .clear
         }
@@ -108,7 +179,7 @@ struct PrimaryButton: View {
     private var shadowRadius: CGFloat {
         switch style {
         case .primary:
-            return enabled ? 12 : 0
+            return enabled ? 20 : 0
         case .secondary, .text:
             return 0
         }
@@ -117,7 +188,7 @@ struct PrimaryButton: View {
     private var shadowY: CGFloat {
         switch style {
         case .primary:
-            return enabled ? 6 : 0
+            return enabled ? 10 : 0
         case .secondary, .text:
             return 0
         }

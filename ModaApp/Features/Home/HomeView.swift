@@ -2,7 +2,7 @@
 //  HomeView.swift
 //  ModaApp
 //
-//  Main screen showing app features and navigation
+//  Main screen with enhanced animations and parallax effects
 //
 
 import SwiftUI
@@ -13,163 +13,215 @@ struct HomeView: View {
     @State private var selectedFeature: AppFeature?
     @State private var animateElements = false
     @State private var showPurchaseView = false
+    @State private var heroScale: CGFloat = 0.5
+    @State private var particlesVisible = false
+    @State private var previousCredits: Int = 0
     
     var body: some View {
         NavigationStack {
             ZStack {
-                // Clean background
-                ModernTheme.background
-                    .ignoresSafeArea()
+                // Animated gradient background
+                AnimatedBackgroundView()
                 
-                // Subtle pattern overlay
-                GeometryReader { geometry in
-                    ForEach(0..<5) { index in
-                        Circle()
-                            .fill(ModernTheme.lightSage.opacity(0.05))
-                            .frame(width: 300, height: 300)
-                            .offset(
-                                x: CGFloat.random(in: -100...geometry.size.width),
-                                y: CGFloat.random(in: -100...geometry.size.height)
-                            )
-                            .blur(radius: 40)
-                    }
-                }
-                .ignoresSafeArea()
+                // Floating orbs with parallax
+                FloatingOrbsView()
                 
                 VStack(spacing: 0) {
                     ScrollView {
                         VStack(spacing: ModernTheme.Spacing.xl) {
-                            // Welcome Section
+                            // Welcome Section with hero animation
                             WelcomeSection()
-                                .padding(.top, 20) // Reduced from 80 to 20
-                                .opacity(animateElements ? 1 : 0)
-                                .offset(y: animateElements ? 0 : 20)
+                                .padding(.top, 20)
+                                .scaleEffect(heroScale)
+                                .opacity(heroScale)
+                                .onAppear {
+                                    withAnimation(.spring(response: 0.8, dampingFraction: 0.7).delay(0.2)) {
+                                        heroScale = 1.0
+                                    }
+                                }
                             
-                            // Feature Section with Credits
+                            // Feature Section with staggered animations
                             VStack(alignment: .leading, spacing: ModernTheme.Spacing.lg) {
                                 // Get Started and Credits Row
                                 HStack(alignment: .center) {
                                     Text(localized(.getStarted))
                                         .font(ModernTheme.Typography.title2)
                                         .foregroundColor(ModernTheme.textPrimary)
+                                        .shimmer()
                                     
                                     Spacer()
                                     
-                                    // Credits Display
-                                    Button {
-                                        showPurchaseView = true
-                                    } label: {
-                                        HStack(spacing: ModernTheme.Spacing.xs) {
-                                            Image(systemName: "leaf.circle.fill")
-                                                .font(.system(size: 20))
-                                                .foregroundColor(ModernTheme.primary)
-                                            
-                                            Text("\(LocalizationHelpers.formatNumber(creditsManager.remainingCredits))")
-                                                .font(ModernTheme.Typography.body)
-                                                .fontWeight(.semibold)
-                                                .foregroundColor(ModernTheme.textPrimary)
-                                            
-                                            Text(localized(.credits))
-                                                .font(ModernTheme.Typography.caption)
-                                                .foregroundColor(ModernTheme.textSecondary)
-                                            
-                                            if creditsManager.remainingCredits == 0 {
-                                                Image(systemName: "plus.circle.fill")
-                                                    .font(.system(size: 16))
-                                                    .foregroundColor(ModernTheme.secondary)
-                                            }
-                                        }
-                                        .padding(.horizontal, ModernTheme.Spacing.md)
-                                        .padding(.vertical, ModernTheme.Spacing.xs)
-                                        .background(
-                                            Capsule()
-                                                .fill(creditsManager.remainingCredits > 0 ? ModernTheme.lightSage : ModernTheme.secondary.opacity(0.1))
-                                        )
-                                    }
-                                    .buttonStyle(PlainButtonStyle())
+                                    // Animated Credits Display
+                                    CreditDisplay(
+                                        credits: creditsManager.remainingCredits,
+                                        onTap: { showPurchaseView = true }
+                                    )
+                                    .transition(.scale.combined(with: .opacity))
                                 }
                                 .padding(.horizontal)
+                                .opacity(animateElements ? 1 : 0)
+                                .offset(y: animateElements ? 0 : 20)
                                 
-                                // No Credits Banner (if needed)
+                                // No Credits Banner with elastic animation
                                 if creditsManager.remainingCredits == 0 {
                                     NoCreditsCard(onPurchase: { showPurchaseView = true })
                                         .padding(.horizontal)
-                                        .transition(.asymmetric(
-                                            insertion: .scale(scale: 0.9).combined(with: .opacity),
-                                            removal: .scale(scale: 0.9).combined(with: .opacity)
-                                        ))
+                                        .transition(.glassReveal)
+                                        .elasticDrag()
                                 }
                                 
-                                // Feature Cards
-                                ForEach(AppFeature.allCases) { feature in
+                                // Feature Cards with parallax
+                                ForEach(Array(AppFeature.allCases.enumerated()), id: \.element) { index, feature in
                                     MinimalFeatureCard(
                                         feature: feature,
-                                        action: { selectedFeature = feature }
+                                        action: {
+                                            withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
+                                                selectedFeature = feature
+                                            }
+                                        }
                                     )
                                     .padding(.horizontal)
                                     .opacity(animateElements ? 1 : 0)
-                                    .offset(y: animateElements ? 0 : 30)
+                                    .offset(y: animateElements ? 0 : 50)
+                                    .animation(
+                                        .spring(response: 0.6, dampingFraction: 0.8)
+                                        .delay(Double(index) * 0.15),
+                                        value: animateElements
+                                    )
                                 }
                             }
                             .padding(.top, ModernTheme.Spacing.lg)
                             
-                            // Footer
-                            VStack(spacing: ModernTheme.Spacing.xs) {
-                                HStack(spacing: 4) {
-                                    ForEach(0..<3) { _ in
-                                        Circle()
-                                            .fill(ModernTheme.tertiary)
-                                            .frame(width: 4, height: 4)
-                                    }
-                                }
-                                
-                                Text(localized(.madeWithLove))
-                                    .font(ModernTheme.Typography.caption)
-                                    .foregroundColor(ModernTheme.textTertiary)
-                            }
-                            .padding(.top, ModernTheme.Spacing.xxl)
-                            .padding(.bottom, ModernTheme.Spacing.xxl)
+                            // Animated Footer
+                            FooterView()
+                                .opacity(animateElements ? 1 : 0)
+                                .animation(.easeOut(duration: 1).delay(0.8), value: animateElements)
                         }
-                        .padding(.bottom, 100) // Space for language button
+                        .padding(.bottom, 100)
                     }
                 }
                 
-                // Language Button at Bottom Right
+                // Floating Language Button
                 VStack {
                     Spacer()
                     HStack {
                         Spacer()
                         LanguageButton()
+                            .floatingAnimation(delay: 0.5)
                             .padding(.trailing, ModernTheme.Spacing.lg)
                             .padding(.bottom, ModernTheme.Spacing.xl)
                     }
                 }
+                
+                // Particle effects when credits are added
+                if particlesVisible {
+                    ParticleEffectView()
+                        .allowsHitTesting(false)
+                }
             }
-            .navigationBarHidden(true) // Hide the navigation bar completely
+            .navigationBarHidden(true)
             .fullScreenCover(item: $selectedFeature) { feature in
                 switch feature {
                 case .modaAnalyzer:
                     ContentView()
                         .environmentObject(localizationManager)
+                        .transition(.luxurySlide)
                 }
             }
             .fullScreenCover(isPresented: $showPurchaseView) {
                 PurchaseView()
                     .environmentObject(localizationManager)
+                    .transition(.hero)
             }
         }
         .onAppear {
-            withAnimation(.easeOut(duration: 0.8)) {
+            previousCredits = creditsManager.remainingCredits
+            withAnimation(.easeOut(duration: 0.8).delay(0.3)) {
                 animateElements = true
+            }
+        }
+        .onChange(of: creditsManager.remainingCredits) { newValue in  // Fixed: iOS 16 compatible syntax
+            if newValue > previousCredits {
+                particlesVisible = true
+                DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                    particlesVisible = false
+                }
+            }
+            previousCredits = newValue
+        }
+    }
+}
+
+// MARK: - Animated Background
+struct AnimatedBackgroundView: View {
+    @State private var gradientRotation: Double = 0
+    
+    var body: some View {
+        ZStack {
+            ModernTheme.background
+                .ignoresSafeArea()
+            
+            // Animated gradient overlay
+            LinearGradient(
+                colors: [
+                    ModernTheme.primary.opacity(0.1),
+                    ModernTheme.secondary.opacity(0.05),
+                    Color.clear,
+                    ModernTheme.accent.opacity(0.05)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            .rotationEffect(.degrees(gradientRotation))
+            .ignoresSafeArea()
+            .onAppear {
+                withAnimation(.linear(duration: 20).repeatForever(autoreverses: false)) {
+                    gradientRotation = 360
+                }
             }
         }
     }
 }
 
-// MARK: - No Credits Card
+// MARK: - Floating Orbs
+struct FloatingOrbsView: View {
+    var body: some View {
+        GeometryReader { geometry in
+            ZStack {
+                ForEach(0..<5) { index in
+                    Circle()
+                        .fill(
+                            RadialGradient(
+                                colors: [
+                                    ModernTheme.primary.opacity(0.2),
+                                    ModernTheme.secondary.opacity(0.1),
+                                    Color.clear
+                                ],
+                                center: .center,
+                                startRadius: 0,
+                                endRadius: 150
+                            )
+                        )
+                        .frame(width: 300, height: 300)
+                        .blur(radius: 40)
+                        .offset(
+                            x: CGFloat.random(in: -100...geometry.size.width),
+                            y: CGFloat.random(in: -100...geometry.size.height)
+                        )
+                        .floatingAnimation(delay: Double(index) * 0.3)
+                        .parallaxEffect(magnitude: CGFloat(index + 1) * 5)
+                }
+            }
+        }
+        .ignoresSafeArea()
+    }
+}
+
+// MARK: - No Credits Card with Animation
 struct NoCreditsCard: View {
     let onPurchase: () -> Void
     @EnvironmentObject var localizationManager: LocalizationManager
+    @State private var isPressed = false
     
     var body: some View {
         HStack(spacing: ModernTheme.Spacing.md) {
@@ -194,14 +246,41 @@ struct NoCreditsCard: View {
                     .foregroundColor(.white)
                     .padding(.horizontal, ModernTheme.Spacing.md)
                     .padding(.vertical, ModernTheme.Spacing.sm)
-                    .background(ModernTheme.secondaryGradient)
+                    .background(
+                        ZStack {
+                            ModernTheme.secondaryGradient
+                            
+                            // Pulse effect
+                            if !isPressed {
+                                Circle()
+                                    .stroke(ModernTheme.secondary, lineWidth: 2)
+                                    .scaleEffect(1.5)
+                                    .opacity(0)
+                                    .animation(
+                                        .easeOut(duration: 1)
+                                        .repeatForever(autoreverses: false),
+                                        value: isPressed
+                                    )
+                            }
+                        }
+                    )
                     .cornerRadius(ModernTheme.CornerRadius.full)
             }
+            .scaleEffect(isPressed ? 0.95 : 1.0)
+            .onLongPressGesture(minimumDuration: .infinity, maximumDistance: .infinity,
+                pressing: { pressing in
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                        isPressed = pressing
+                    }
+                },
+                perform: {}
+            )
         }
         .padding(ModernTheme.Spacing.lg)
         .background(
             RoundedRectangle(cornerRadius: ModernTheme.CornerRadius.large)
                 .fill(ModernTheme.secondary.opacity(0.1))
+                .background(.ultraThinMaterial.opacity(0.5))
                 .overlay(
                     RoundedRectangle(cornerRadius: ModernTheme.CornerRadius.large)
                         .stroke(ModernTheme.secondary.opacity(0.2), lineWidth: 1)
@@ -210,9 +289,11 @@ struct NoCreditsCard: View {
     }
 }
 
-// MARK: - Welcome Section
+// MARK: - Welcome Section with Animations
 struct WelcomeSection: View {
     @EnvironmentObject var localizationManager: LocalizationManager
+    @State private var titleScale: CGFloat = 0
+    @State private var subtitleOffset: CGFloat = 50
     
     var body: some View {
         VStack(spacing: ModernTheme.Spacing.md) {
@@ -220,10 +301,17 @@ struct WelcomeSection: View {
             HStack(spacing: ModernTheme.Spacing.xs) {
                 Image(systemName: "leaf.fill")
                     .font(.system(size: 36))
-                    .foregroundColor(ModernTheme.primary)
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [ModernTheme.primary, ModernTheme.secondary],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .rotationEffect(.degrees(titleScale * 360))
                 
                 Text(localized(.appName))
-                    .font(.system(size: 36, weight: .bold, design: .rounded))
+                    .font(.system(size: 36, weight: .bold, design: .serif))
                     .foregroundStyle(
                         LinearGradient(
                             colors: [ModernTheme.primary, ModernTheme.secondary],
@@ -231,6 +319,12 @@ struct WelcomeSection: View {
                             endPoint: .trailing
                         )
                     )
+            }
+            .scaleEffect(titleScale)
+            .onAppear {
+                withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
+                    titleScale = 1
+                }
             }
             
             // Welcome Text
@@ -258,29 +352,52 @@ struct WelcomeSection: View {
                     .padding(.horizontal, ModernTheme.Spacing.xl)
                     .padding(.top, ModernTheme.Spacing.xs)
             }
+            .offset(y: subtitleOffset)
+            .opacity(subtitleOffset == 0 ? 1 : 0)
+            .onAppear {
+                withAnimation(.spring(response: 0.8, dampingFraction: 0.7).delay(0.3)) {
+                    subtitleOffset = 0
+                }
+            }
         }
     }
 }
 
-// MARK: - Minimal Feature Card
+// MARK: - Minimal Feature Card with Hover
 struct MinimalFeatureCard: View {
     @EnvironmentObject var localizationManager: LocalizationManager
     let feature: AppFeature
     let action: () -> Void
     @State private var isPressed = false
+    @State private var isHovered = false
     
     var body: some View {
         Button(action: action) {
             HStack(spacing: ModernTheme.Spacing.md) {
-                // Icon
+                // Animated Icon
                 ZStack {
                     Circle()
                         .fill(ModernTheme.primary.opacity(0.1))
                         .frame(width: 56, height: 56)
+                        .overlay(
+                            Circle()
+                                .stroke(ModernTheme.primaryGradient.opacity(0.3), lineWidth: 1)
+                                .scaleEffect(isHovered ? 1.2 : 1.0)
+                                .opacity(isHovered ? 1 : 0)
+                                .animation(.easeOut(duration: 0.3), value: isHovered)
+                        )
                     
                     Image(systemName: feature.icon)
                         .font(.system(size: 24, weight: .medium))
-                        .foregroundColor(ModernTheme.primary)
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [ModernTheme.primary, ModernTheme.secondary],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .rotationEffect(.degrees(isHovered ? 10 : 0))
+                        .animation(.spring(response: 0.4, dampingFraction: 0.6), value: isHovered)
                 }
                 
                 // Content
@@ -297,32 +414,45 @@ struct MinimalFeatureCard: View {
                 
                 Spacer()
                 
-                // Arrow
+                // Animated Arrow
                 Image(systemName: "arrow.right.circle.fill")
                     .font(.system(size: 28))
-                    .foregroundColor(ModernTheme.primary)
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [ModernTheme.primary, ModernTheme.secondary],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
                     .opacity(feature.isAvailable ? 1 : 0.5)
+                    .offset(x: isHovered ? 5 : 0)
+                    .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isHovered)
             }
             .padding(ModernTheme.Spacing.lg)
             .background(
                 RoundedRectangle(cornerRadius: ModernTheme.CornerRadius.large)
                     .fill(ModernTheme.surface)
+                    .background(.ultraThinMaterial.opacity(0.3))
                     .shadow(
-                        color: ModernTheme.primary.opacity(0.08),
-                        radius: 8,
+                        color: isHovered ? ModernTheme.primary.opacity(0.2) : ModernTheme.primary.opacity(0.08),
+                        radius: isHovered ? 12 : 8,
                         x: 0,
-                        y: 4
+                        y: isHovered ? 6 : 4
                     )
             )
             .overlay(
                 RoundedRectangle(cornerRadius: ModernTheme.CornerRadius.large)
-                    .stroke(ModernTheme.primary.opacity(0.1), lineWidth: 1)
+                    .stroke(ModernTheme.primaryGradient.opacity(isHovered ? 0.3 : 0.1), lineWidth: 1)
             )
             .scaleEffect(isPressed ? 0.98 : 1.0)
         }
         .buttonStyle(PlainButtonStyle())
         .disabled(!feature.isAvailable)
-        .scaleEffect(isPressed ? 0.98 : 1.0)
+        .onHover { hovering in
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                isHovered = hovering
+            }
+        }
         .onLongPressGesture(minimumDuration: .infinity, maximumDistance: .infinity,
             pressing: { pressing in
                 withAnimation(.easeInOut(duration: 0.1)) {
@@ -331,6 +461,42 @@ struct MinimalFeatureCard: View {
             },
             perform: {}
         )
+    }
+}
+
+// MARK: - Animated Footer
+struct FooterView: View {
+    @State private var dotsScale: [CGFloat] = [1, 1, 1]
+    
+    var body: some View {
+        VStack(spacing: ModernTheme.Spacing.xs) {
+            HStack(spacing: 8) {
+                ForEach(0..<3) { index in
+                    Circle()
+                        .fill(ModernTheme.tertiary)
+                        .frame(width: 6, height: 6)
+                        .scaleEffect(dotsScale[index])
+                        .animation(
+                            .spring(response: 0.5, dampingFraction: 0.5)
+                            .delay(Double(index) * 0.1)
+                            .repeatForever(autoreverses: true),
+                            value: dotsScale[index]
+                        )
+                }
+            }
+            .onAppear {
+                for index in 0..<3 {
+                    dotsScale[index] = 1.5
+                }
+            }
+            
+            Text(localized(.madeWithLove))
+                .font(ModernTheme.Typography.caption)
+                .foregroundColor(ModernTheme.textTertiary)
+                .shimmer()
+        }
+        .padding(.top, ModernTheme.Spacing.xxl)
+        .padding(.bottom, ModernTheme.Spacing.xxl)
     }
 }
 
