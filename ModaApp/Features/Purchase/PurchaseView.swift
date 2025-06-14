@@ -9,27 +9,27 @@ import SwiftUI
 import StoreKit
 
 struct PurchaseView: View {
-    @StateObject private var storeManager = StoreKitManager.shared
+    @StateObject private var storeManager  = StoreKitManager.shared
     @StateObject private var creditsManager = CreditsManager.shared
-    @EnvironmentObject var localizationManager: LocalizationManager
+    @EnvironmentObject private var localizationManager: LocalizationManager
     @Environment(\.dismiss) private var dismiss
     
     @State private var selectedProduct: Product?
     @State private var showPurchaseError = false
     @State private var showSuccessAnimation = false
     @State private var purchasedCredits = 0
-    @State private var confettiCounter = 0
-    @State private var headerScale: CGFloat = 1.0
+    @State private var confettiCounter   = 0
+    @State private var headerScale: CGFloat = 1
     
     var body: some View {
         NavigationStack {
             ZStack {
-                // Animated Background
+                // Animated background
                 PurchaseBackground()
                 
                 ScrollView {
                     VStack(spacing: ModernTheme.Spacing.xl) {
-                        // Animated Header
+                        // Header
                         LuxuryPurchaseHeader(
                             currentCredits: creditsManager.remainingCredits,
                             scale: headerScale
@@ -38,21 +38,17 @@ struct PurchaseView: View {
                         .onAppear {
                             withAnimation(
                                 .spring(response: 2, dampingFraction: 0.6)
-                                .repeatForever(autoreverses: true)
-                            ) {
-                                headerScale = 1.05
-                            }
+                                    .repeatForever(autoreverses: true)
+                            ) { headerScale = 1.05 }
                         }
                         
-                        // Products Section
+                        // Products
                         if storeManager.isLoading && storeManager.products.isEmpty {
                             LuxuryLoadingView()
                         } else if storeManager.products.isEmpty {
-                            EmptyProductsView(onRetry: {
-                                Task {
-                                    await storeManager.loadProducts()
-                                }
-                            })
+                            EmptyProductsView {
+                                Task { await storeManager.loadProducts() }
+                            }
                         } else {
                             LuxuryProductsGrid(
                                 products: storeManager.products,
@@ -61,7 +57,7 @@ struct PurchaseView: View {
                             )
                         }
                         
-                        // Purchase Button
+                        // Purchase button
                         if let selected = selectedProduct {
                             LuxuryPurchaseButton(
                                 product: selected,
@@ -71,11 +67,11 @@ struct PurchaseView: View {
                             .padding(.horizontal)
                         }
                         
-                        // Features List
+                        // Feature list
                         PurchaseFeaturesView()
                             .padding(.horizontal)
                         
-                        // Restore Button
+                        // Restore
                         LuxuryRestoreButton(
                             isLoading: storeManager.isLoading,
                             onRestore: restorePurchases
@@ -88,13 +84,13 @@ struct PurchaseView: View {
                     .padding(.horizontal)
                 }
                 
-                // Success Overlay with Confetti
+                // Success overlay
                 if showSuccessAnimation {
                     SuccessOverlay(
                         creditsAdded: purchasedCredits,
                         confettiCounter: confettiCounter
                     )
-                    .transition(.scale.combined(with: .opacity))
+                    .transition(.scale.combined(with: AnyTransition.opacity)) // disambiguated
                 }
             }
             .navigationTitle(localized(.buyCredits))
@@ -109,47 +105,28 @@ struct PurchaseView: View {
             } message: {
                 Text(storeManager.error?.errorDescription ?? localized(.purchaseFailed))
             }
-            .onChange(of: storeManager.products) { _ in
-                selectDefaultProduct()
-            }
+            .onChange(of: storeManager.products) { _ in selectDefaultProduct() }
         }
     }
     
-    // MARK: - Purchase Methods
-    
+    // MARK: - Purchase helpers
     private func purchase(_ product: Product) {
         Task {
-            let result = await storeManager.purchase(product)
-            
-            switch result {
+            switch await storeManager.purchase(product) {
             case .success(let credits):
                 purchasedCredits = credits
                 confettiCounter += 1
-                
                 withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
                     showSuccessAnimation = true
                 }
-                
-                // Haptic feedback
-                let generator = UINotificationFeedbackGenerator()
-                generator.notificationOccurred(.success)
-                
-                // Dismiss after animation
-                DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
-                    dismiss()
-                }
+                UINotificationFeedbackGenerator().notificationOccurred(.success)
+                DispatchQueue.main.asyncAfter(deadline: .now() + 3) { dismiss() }
                 
             case .failed:
                 showPurchaseError = true
+                UINotificationFeedbackGenerator().notificationOccurred(.error)
                 
-                // Haptic feedback
-                let generator = UINotificationFeedbackGenerator()
-                generator.notificationOccurred(.error)
-                
-            case .cancelled, .pending:
-                break
-                
-            case .restored:
+            case .cancelled, .pending, .restored:
                 break
             }
         }
@@ -157,26 +134,18 @@ struct PurchaseView: View {
     
     private func restorePurchases() {
         Task {
-            let result = await storeManager.restorePurchases()
-            
-            switch result {
+            switch await storeManager.restorePurchases() {
             case .restored(let totalCredits):
                 if totalCredits > 0 {
                     purchasedCredits = totalCredits
                     confettiCounter += 1
-                    withAnimation {
-                        showSuccessAnimation = true
-                    }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
-                        dismiss()
-                    }
+                    withAnimation { showSuccessAnimation = true }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 3) { dismiss() }
                 } else {
                     showPurchaseError = true
                 }
-                
             case .failed:
                 showPurchaseError = true
-                
             default:
                 break
             }
@@ -184,23 +153,22 @@ struct PurchaseView: View {
     }
     
     private func selectDefaultProduct() {
-        if selectedProduct == nil,
-           let popular = storeManager.products.first(where: {
-               storeManager.creditProduct(for: $0)?.isPopular == true
-           }) {
-            selectedProduct = popular
-        }
+        guard selectedProduct == nil,
+              let popular = storeManager.products.first(where: {
+                  storeManager.creditProduct(for: $0)?.isPopular == true
+              })
+        else { return }
+        selectedProduct = popular
     }
 }
 
-// MARK: - Purchase Background
+// MARK: - Background
 struct PurchaseBackground: View {
     @State private var animateGradient = false
     @State private var sparklePositions: [CGPoint] = []
     
     var body: some View {
         ZStack {
-            // Base gradient
             LinearGradient(
                 colors: [
                     ModernTheme.background,
@@ -218,15 +186,14 @@ struct PurchaseBackground: View {
                 generateSparkles()
             }
             
-            // Floating sparkles
-            ForEach(sparklePositions.indices, id: \.self) { index in
+            ForEach(sparklePositions.indices, id: \.self) { i in
                 Image(systemName: "sparkle")
                     .font(.system(size: CGFloat.random(in: 8...20)))
                     .foregroundColor(ModernTheme.tertiary.opacity(0.3))
-                    .position(sparklePositions[index])
+                    .position(sparklePositions[i])
                     .animation(
                         .linear(duration: Double.random(in: 10...20))
-                        .repeatForever(autoreverses: false),
+                            .repeatForever(autoreverses: false),
                         value: sparklePositions
                     )
             }
@@ -243,18 +210,16 @@ struct PurchaseBackground: View {
     }
 }
 
-// MARK: - Luxury Purchase Header
+// MARK: - Header
 struct LuxuryPurchaseHeader: View {
     let currentCredits: Int
     let scale: CGFloat
-    @EnvironmentObject var localizationManager: LocalizationManager
-    @State private var iconRotation: Double = 0
+    @EnvironmentObject private var localizationManager: LocalizationManager
+    @State private var iconRotation = 0.0
     
     var body: some View {
         VStack(spacing: ModernTheme.Spacing.lg) {
-            // Animated Icon
             ZStack {
-                // Glow effect
                 Circle()
                     .fill(ModernTheme.secondaryGradient)
                     .frame(width: 120, height: 120)
@@ -262,7 +227,6 @@ struct LuxuryPurchaseHeader: View {
                     .opacity(0.5)
                     .scaleEffect(scale)
                 
-                // Main icon container
                 Circle()
                     .fill(ModernTheme.primaryGradient)
                     .frame(width: 100, height: 100)
@@ -283,7 +247,6 @@ struct LuxuryPurchaseHeader: View {
                 }
             }
             
-            // Credits Display
             VStack(spacing: ModernTheme.Spacing.sm) {
                 Text(localized(.credits))
                     .font(ModernTheme.Typography.headline)
@@ -303,9 +266,9 @@ struct LuxuryPurchaseHeader: View {
                     }
                 }
                 
-                Text(localizationManager.currentLanguage == .turkish ?
-                     "Her analiz 1 kredi harcar" :
-                     "Each analysis uses 1 credit")
+                Text(localizationManager.currentLanguage == .turkish
+                     ? "Her analiz 1 kredi harcar"
+                     : "Each analysis uses 1 credit")
                     .font(ModernTheme.Typography.caption)
                     .foregroundColor(ModernTheme.textTertiary)
             }
@@ -313,7 +276,7 @@ struct LuxuryPurchaseHeader: View {
     }
 }
 
-// MARK: - Luxury Products Grid
+// MARK: - Products grid
 struct LuxuryProductsGrid: View {
     let products: [Product]
     @Binding var selectedProduct: Product?
@@ -321,20 +284,19 @@ struct LuxuryProductsGrid: View {
     
     var body: some View {
         VStack(spacing: ModernTheme.Spacing.md) {
-            ForEach(Array(products.enumerated()), id: \.element.id) { index, product in
+            ForEach(Array(products.enumerated()), id: \.element.id) { i, product in
                 LuxuryProductCard(
                     product: product,
                     isSelected: selectedProduct?.id == product.id,
                     creditProduct: storeManager.creditProduct(for: product),
-                    animationDelay: Double(index) * 0.1,
-                    onTap: { selectedProduct = product }
-                )
+                    animationDelay: Double(i) * 0.1
+                ) { selectedProduct = product }
             }
         }
     }
 }
 
-// MARK: - Luxury Product Card
+// MARK: - Product card
 struct LuxuryProductCard: View {
     let product: Product
     let isSelected: Bool
@@ -342,25 +304,23 @@ struct LuxuryProductCard: View {
     let animationDelay: Double
     let onTap: () -> Void
     
-    @EnvironmentObject var localizationManager: LocalizationManager
+    @EnvironmentObject private var localizationManager: LocalizationManager
     @State private var isPressed = false
-    @State private var appeared = false
-    @State private var badgeScale: CGFloat = 1.0
+    @State private var appeared  = false
+    @State private var badgeScale: CGFloat = 1
     
     var body: some View {
         Button(action: {
-            let impact = UIImpactFeedbackGenerator(style: .light)
-            impact.impactOccurred()
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
             onTap()
         }) {
             HStack(spacing: ModernTheme.Spacing.lg) {
-                // Credit Amount with animation
                 ZStack {
                     Circle()
                         .fill(
-                            isSelected ?
-                            ModernTheme.secondaryGradient :
-                            LinearGradient(
+                            isSelected
+                            ? ModernTheme.secondaryGradient
+                            : LinearGradient(
                                 colors: [ModernTheme.lightBlush, ModernTheme.accent],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
@@ -368,10 +328,8 @@ struct LuxuryProductCard: View {
                         )
                         .frame(width: 80, height: 80)
                         .shadow(
-                            color: isSelected ? ModernTheme.Shadow.colored.color : Color.clear,
-                            radius: 12,
-                            x: 0,
-                            y: 6
+                            color: isSelected ? ModernTheme.Shadow.colored.color : .clear,
+                            radius: 12, x: 0, y: 6
                         )
                     
                     VStack(spacing: 2) {
@@ -384,16 +342,15 @@ struct LuxuryProductCard: View {
                             .foregroundColor(isSelected ? .white.opacity(0.9) : ModernTheme.textSecondary)
                     }
                 }
-                .scaleEffect(isSelected ? 1.05 : 1.0)
+                .scaleEffect(isSelected ? 1.05 : 1)
                 
-                // Product Details
                 VStack(alignment: .leading, spacing: ModernTheme.Spacing.xs) {
                     HStack {
                         Text(product.displayName)
                             .font(ModernTheme.Typography.headline)
                             .foregroundColor(ModernTheme.textPrimary)
                         
-                        if let creditProduct = creditProduct {
+                        if let creditProduct {
                             if creditProduct.isPopular {
                                 PremiumBadge(
                                     text: localized(.mostPopular),
@@ -417,21 +374,20 @@ struct LuxuryProductCard: View {
                 
                 Spacer()
                 
-                // Price with animation
                 VStack(alignment: .trailing, spacing: 2) {
                     Text(product.displayPrice)
                         .font(.system(size: 24, weight: .bold, design: .rounded))
                         .foregroundStyle(
-                            isSelected ?
-                            ModernTheme.primaryGradient :
-                            LinearGradient(colors: [ModernTheme.textPrimary], startPoint: .leading, endPoint: .trailing)
+                            isSelected
+                            ? ModernTheme.primaryGradient
+                            : LinearGradient(colors: [ModernTheme.textPrimary], startPoint: .leading, endPoint: .trailing)
                         )
                     
-                    if let creditProduct = creditProduct, creditProduct.creditAmount > 0 {
-                        let pricePerCredit = product.price / Decimal(creditProduct.creditAmount)
-                        Text(localizationManager.currentLanguage == .turkish ?
-                             "kredi başı \(pricePerCredit.formatted(.currency(code: product.priceFormatStyle.currencyCode)))" :
-                             "\(pricePerCredit.formatted(.currency(code: product.priceFormatStyle.currencyCode)))/credit")
+                    if let creditProduct, creditProduct.creditAmount > 0 {
+                        let pricePer = product.price / Decimal(creditProduct.creditAmount)
+                        Text(localizationManager.currentLanguage == .turkish
+                             ? "kredi başı \(pricePer.formatted(.currency(code: product.priceFormatStyle.currencyCode)))"
+                             : "\(pricePer.formatted(.currency(code: product.priceFormatStyle.currencyCode)))/credit")
                             .font(ModernTheme.Typography.caption2)
                             .foregroundColor(ModernTheme.textTertiary)
                     }
@@ -440,24 +396,19 @@ struct LuxuryProductCard: View {
             .padding(ModernTheme.Spacing.lg)
             .background(
                 RoundedRectangle(cornerRadius: ModernTheme.CornerRadius.xl)
-                    .fill(
-                        isSelected ?
-                        ModernTheme.glassWhite :
-                        ModernTheme.surface
-                    )
+                    .fill(isSelected ? ModernTheme.glassWhite : ModernTheme.surface)
                     .background(
-                        isSelected ? AnyView(
-                            RoundedRectangle(cornerRadius: ModernTheme.CornerRadius.xl)
-                                .fill(.ultraThinMaterial)
-                        ) : AnyView(Color.clear)
+                        isSelected
+                        ? AnyView(RoundedRectangle(cornerRadius: ModernTheme.CornerRadius.xl).fill(.ultraThinMaterial))
+                        : AnyView(Color.clear)
                     )
             )
             .overlay(
                 RoundedRectangle(cornerRadius: ModernTheme.CornerRadius.xl)
                     .stroke(
-                        isSelected ?
-                        ModernTheme.secondaryGradient :
-                        LinearGradient(colors: [ModernTheme.glassBorder], startPoint: .leading, endPoint: .trailing),
+                        isSelected
+                        ? ModernTheme.secondaryGradient
+                        : LinearGradient(colors: [ModernTheme.glassBorder], startPoint: .leading, endPoint: .trailing),
                         lineWidth: isSelected ? 2 : 1
                     )
             )
@@ -467,34 +418,25 @@ struct LuxuryProductCard: View {
                 x: 0,
                 y: isSelected ? 8 : ModernTheme.Shadow.small.y
             )
-            .scaleEffect(isPressed ? 0.98 : 1.0)
+            .scaleEffect(isPressed ? 0.98 : 1)
             .offset(x: appeared ? 0 : -50)
             .opacity(appeared ? 1 : 0)
         }
-        .buttonStyle(PlainButtonStyle())
+        .buttonStyle(.plain)
         .onLongPressGesture(
             minimumDuration: .infinity,
             maximumDistance: .infinity,
-            pressing: { pressing in
-                withAnimation(ModernTheme.springAnimation) {
-                    isPressed = pressing
-                }
-            },
-            perform: {}
+            pressing: { p in
+                withAnimation(ModernTheme.springAnimation) { isPressed = p }
+            }, perform: { }
         )
         .onAppear {
             withAnimation(
-                .spring(response: 0.6, dampingFraction: 0.7)
-                .delay(animationDelay)
-            ) {
-                appeared = true
-            }
+                .spring(response: 0.6, dampingFraction: 0.7).delay(animationDelay)
+            ) { appeared = true }
             
             if creditProduct?.isPopular == true || creditProduct?.isBestValue == true {
-                withAnimation(
-                    .easeInOut(duration: 1.5)
-                    .repeatForever(autoreverses: true)
-                ) {
+                withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {
                     badgeScale = 1.1
                 }
             }
@@ -502,7 +444,7 @@ struct LuxuryProductCard: View {
     }
 }
 
-// MARK: - Premium Badge
+// MARK: - Premium badge
 struct PremiumBadge: View {
     let text: String
     let color: Color
@@ -525,16 +467,11 @@ struct PremiumBadge: View {
                     )
             )
             .scaleEffect(scale)
-            .shadow(
-                color: color.opacity(0.3),
-                radius: 4,
-                x: 0,
-                y: 2
-            )
+            .shadow(color: color.opacity(0.3), radius: 4, x: 0, y: 2)
     }
 }
 
-// MARK: - Luxury Purchase Button
+// MARK: - Purchase button
 struct LuxuryPurchaseButton: View {
     let product: Product
     let isLoading: Bool
@@ -546,31 +483,24 @@ struct LuxuryPurchaseButton: View {
     var body: some View {
         Button(action: onPurchase) {
             ZStack {
-                // Background with shimmer
                 RoundedRectangle(cornerRadius: ModernTheme.CornerRadius.full)
                     .fill(ModernTheme.primaryGradient)
                     .overlay(
                         LinearGradient(
-                            colors: [
-                                Color.clear,
-                                Color.white.opacity(0.3),
-                                Color.clear
-                            ],
+                            colors: [.clear, .white.opacity(0.3), .clear],
                             startPoint: .leading,
                             endPoint: .trailing
                         )
                         .frame(width: 100)
                         .offset(x: shimmerOffset)
-                        .mask(
-                            RoundedRectangle(cornerRadius: ModernTheme.CornerRadius.full)
-                        )
+                        .mask(RoundedRectangle(cornerRadius: ModernTheme.CornerRadius.full))
                     )
                 
-                // Content
                 if isLoading {
                     HStack(spacing: ModernTheme.Spacing.sm) {
                         ProgressView()
-                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                            .progressViewStyle(.circular)
+                            .tint(.white)
                         Text(localized(.loading))
                             .font(ModernTheme.Typography.headline)
                             .foregroundColor(.white)
@@ -594,38 +524,32 @@ struct LuxuryPurchaseButton: View {
                 x: 0,
                 y: isPressed ? 4 : ModernTheme.Shadow.colored.y
             )
-            .scaleEffect(isPressed ? 0.98 : 1.0)
+            .scaleEffect(isPressed ? 0.98 : 1)
         }
-        .buttonStyle(PlainButtonStyle())
+        .buttonStyle(.plain)
         .disabled(isLoading)
         .onLongPressGesture(
             minimumDuration: .infinity,
             maximumDistance: .infinity,
-            pressing: { pressing in
-                withAnimation(ModernTheme.springAnimation) {
-                    isPressed = pressing
-                }
-            },
-            perform: {}
+            pressing: { p in
+                withAnimation(ModernTheme.springAnimation) { isPressed = p }
+            }, perform: { }
         )
         .onAppear {
-            withAnimation(
-                .linear(duration: 2)
-                .repeatForever(autoreverses: false)
-            ) {
+            withAnimation(.linear(duration: 2).repeatForever(autoreverses: false)) {
                 shimmerOffset = 400
             }
         }
     }
 }
 
-// MARK: - Purchase Features View
+// MARK: - Feature list
 struct PurchaseFeaturesView: View {
     @State private var animatedFeatures: Set<Int> = []
     
     private let features = [
-        (icon: "bolt.fill", text: LocalizedStringKey.instantDelivery, color: ModernTheme.tertiary),
-        (icon: "lock.fill", text: LocalizedStringKey.securePayment, color: ModernTheme.success),
+        (icon: "bolt.fill",  text: LocalizedStringKey.instantDelivery,  color: ModernTheme.tertiary),
+        (icon: "lock.fill",  text: LocalizedStringKey.securePayment,    color: ModernTheme.success),
         (icon: "arrow.triangle.2.circlepath", text: LocalizedStringKey.restorePurchases, color: ModernTheme.info)
     ]
     
@@ -635,13 +559,14 @@ struct PurchaseFeaturesView: View {
                 HStack(spacing: ModernTheme.Spacing.md) {
                     ZStack {
                         Circle()
-                            .fill(feature.color.opacity(0.1))
+                            .fill(feature.color)           // disambiguated
+                            .opacity(0.1)
                             .frame(width: 40, height: 40)
                         
                         Image(systemName: feature.icon)
                             .font(.system(size: 20))
                             .foregroundColor(feature.color)
-                            .scaleEffect(animatedFeatures.contains(index) ? 1.1 : 1.0)
+                            .scaleEffect(animatedFeatures.contains(index) ? 1.1 : 1)
                     }
                     
                     Text(LocalizationManager.shared.string(for: feature.text))
@@ -655,9 +580,9 @@ struct PurchaseFeaturesView: View {
                 .onAppear {
                     withAnimation(
                         .spring(response: 0.5, dampingFraction: 0.7)
-                        .delay(Double(index) * 0.1)
+                            .delay(Double(index) * 0.1)
                     ) {
-                        animatedFeatures.insert(index)
+                        _ = animatedFeatures.insert(index) // discard tuple to keep Void
                     }
                 }
             }
@@ -665,12 +590,13 @@ struct PurchaseFeaturesView: View {
         .padding(ModernTheme.Spacing.lg)
         .background(
             RoundedRectangle(cornerRadius: ModernTheme.CornerRadius.large)
-                .fill(ModernTheme.primary.opacity(0.05))
+                .fill(ModernTheme.primary)          // disambiguated
+                .opacity(0.05)
         )
     }
 }
 
-// MARK: - Luxury Restore Button
+// MARK: - Restore button
 struct LuxuryRestoreButton: View {
     let isLoading: Bool
     let onRestore: () -> Void
@@ -678,8 +604,7 @@ struct LuxuryRestoreButton: View {
     var body: some View {
         Button(action: onRestore) {
             HStack(spacing: ModernTheme.Spacing.sm) {
-                Image(systemName: "arrow.triangle.2.circlepath")
-                    .font(.system(size: 16))
+                Image(systemName: "arrow.triangle.2.circlepath").font(.system(size: 16))
                 Text(LocalizationManager.shared.string(for: .restorePurchases))
                     .font(ModernTheme.Typography.callout)
             }
@@ -687,46 +612,36 @@ struct LuxuryRestoreButton: View {
             .padding(.vertical, ModernTheme.Spacing.sm)
             .padding(.horizontal, ModernTheme.Spacing.lg)
             .background(
-                Capsule()
-                    .stroke(ModernTheme.primary, lineWidth: 1)
+                Capsule().stroke(ModernTheme.primary, lineWidth: 1)
             )
         }
         .disabled(isLoading)
     }
 }
 
-// MARK: - Luxury Loading View
+// MARK: - Loading view
 struct LuxuryLoadingView: View {
-    @State private var rotationAngle: Double = 0
+    @State private var rotationAngle = 0.0
     
     var body: some View {
         VStack(spacing: ModernTheme.Spacing.lg) {
             ZStack {
-                ForEach(0..<3) { index in
+                ForEach(0..<3) { i in
                     Circle()
                         .stroke(
                             LinearGradient(
-                                colors: [
-                                    ModernTheme.secondary.opacity(0.3),
-                                    ModernTheme.tertiary.opacity(0.1)
-                                ],
+                                colors: [ModernTheme.secondary.opacity(0.3), ModernTheme.tertiary.opacity(0.1)],
                                 startPoint: .leading,
                                 endPoint: .trailing
                             ),
                             lineWidth: 3
                         )
-                        .frame(
-                            width: 60 + CGFloat(index * 20),
-                            height: 60 + CGFloat(index * 20)
-                        )
-                        .rotationEffect(.degrees(rotationAngle + Double(index * 120)))
+                        .frame(width: 60 + CGFloat(i * 20), height: 60 + CGFloat(i * 20))
+                        .rotationEffect(.degrees(rotationAngle + Double(i * 120)))
                 }
             }
             .onAppear {
-                withAnimation(
-                    .linear(duration: 3)
-                    .repeatForever(autoreverses: false)
-                ) {
+                withAnimation(.linear(duration: 3).repeatForever(autoreverses: false)) {
                     rotationAngle = 360
                 }
             }
@@ -739,11 +654,11 @@ struct LuxuryLoadingView: View {
     }
 }
 
-// MARK: - Empty Products View
+// MARK: - Empty products
 struct EmptyProductsView: View {
     let onRetry: () -> Void
-    @EnvironmentObject var localizationManager: LocalizationManager
-    @State private var iconScale: CGFloat = 1.0
+    @EnvironmentObject private var localizationManager: LocalizationManager
+    @State private var iconScale: CGFloat = 1
     
     var body: some View {
         VStack(spacing: ModernTheme.Spacing.lg) {
@@ -752,17 +667,14 @@ struct EmptyProductsView: View {
                 .foregroundStyle(ModernTheme.primaryGradient)
                 .scaleEffect(iconScale)
                 .onAppear {
-                    withAnimation(
-                        .easeInOut(duration: 1.5)
-                        .repeatForever(autoreverses: true)
-                    ) {
+                    withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {
                         iconScale = 1.1
                     }
                 }
             
-            Text(localizationManager.currentLanguage == .turkish ?
-                 "Ürünler yüklenemedi" :
-                 "Could not load products")
+            Text(localizationManager.currentLanguage == .turkish
+                 ? "Ürünler yüklenemedi"
+                 : "Could not load products")
                 .font(ModernTheme.Typography.headline)
                 .foregroundColor(ModernTheme.textPrimary)
             
@@ -786,28 +698,24 @@ struct EmptyProductsView: View {
     }
 }
 
-// MARK: - Success Overlay
+// MARK: - Success overlay
 struct SuccessOverlay: View {
     let creditsAdded: Int
     let confettiCounter: Int
-    @EnvironmentObject var localizationManager: LocalizationManager
-    @State private var scale = 0.5
-    @State private var viewOpacity = 0.0
+    @EnvironmentObject private var localizationManager: LocalizationManager
+    @State private var scale        = 0.5
+    @State private var viewOpacity  = 0.0
     @State private var checkmarkScale = 0.0
     
     var body: some View {
         ZStack {
-            // Background blur
-            Color.black.opacity(0.7)
-                .ignoresSafeArea()
-                .opacity(viewOpacity)
+            Color.black.opacity(0.7).ignoresSafeArea().opacity(viewOpacity)
             
-            // Success Card
             VStack(spacing: ModernTheme.Spacing.xl) {
-                // Animated Checkmark
                 ZStack {
                     Circle()
-                        .fill(ModernTheme.success.opacity(0.1))
+                        .fill(ModernTheme.success) // disambiguated
+                        .opacity(0.1)
                         .frame(width: 140, height: 140)
                         .scaleEffect(scale)
                     
@@ -820,23 +728,16 @@ struct SuccessOverlay: View {
                                 .foregroundColor(.white)
                                 .scaleEffect(checkmarkScale)
                         )
-                        .shadow(
-                            color: ModernTheme.success.opacity(0.5),
-                            radius: 20,
-                            x: 0,
-                            y: 10
-                        )
+                        .shadow(color: ModernTheme.success.opacity(0.5), radius: 20, x: 0, y: 10)
                 }
                 
-                // Success Text
                 VStack(spacing: ModernTheme.Spacing.sm) {
                     Text(localized(.purchaseSuccess))
                         .font(ModernTheme.Typography.title)
                         .foregroundColor(.white)
                     
                     HStack(spacing: 4) {
-                        Image(systemName: "plus")
-                            .font(.system(size: 24, weight: .bold))
+                        Image(systemName: "plus").font(.system(size: 24, weight: .bold))
                         Text("\(creditsAdded)")
                             .font(.system(size: 48, weight: .bold, design: .rounded))
                             .contentTransition(.numericText())
@@ -849,60 +750,53 @@ struct SuccessOverlay: View {
             .scaleEffect(scale)
             .opacity(viewOpacity)
             
-            // Confetti
-            ConfettiView(counter: confettiCounter)
-                .allowsHitTesting(false)
+            ConfettiView(counter: confettiCounter).allowsHitTesting(false)
         }
         .onAppear {
             withAnimation(.spring(response: 0.5, dampingFraction: 0.7)) {
-                scale = 1.0
-                viewOpacity = 1.0
+                scale = 1
+                viewOpacity = 1
             }
-            
-            withAnimation(
-                .spring(response: 0.5, dampingFraction: 0.6)
-                .delay(0.3)
-            ) {
-                checkmarkScale = 1.0
+            withAnimation(.spring(response: 0.5, dampingFraction: 0.6).delay(0.3)) {
+                checkmarkScale = 1
             }
         }
     }
 }
 
-// MARK: - Confetti View
+// MARK: - Confetti
+struct ConfettiPiece: Identifiable {
+    let id = UUID()
+    var position: CGPoint
+    let color: Color
+    let size: CGFloat
+    let velocity: CGFloat
+    let angularVelocity: Double
+}
+
 struct ConfettiView: View {
     let counter: Int
-    @State private var confettiPieces: [ConfettiPiece] = []
+    @State private var pieces: [ConfettiPiece] = []
     
     var body: some View {
-        GeometryReader { geometry in
+        GeometryReader { geo in
             ZStack {
-                ForEach(confettiPieces) { piece in
+                ForEach(pieces) { piece in
                     ConfettiPieceView(piece: piece)
                 }
             }
-            .onAppear {
-                createConfetti(in: geometry.size)
-            }
-            .onChange(of: counter) { _ in
-                createConfetti(in: geometry.size)
-            }
+            .onAppear { spawn(in: geo.size) }
+            .onChange(of: counter) { _ in spawn(in: geo.size) }
         }
     }
     
-    private func createConfetti(in size: CGSize) {
-        confettiPieces = (0..<50).map { _ in
+    private func spawn(in size: CGSize) {
+        pieces = (0..<50).map { _ in
             ConfettiPiece(
-                position: CGPoint(
-                    x: CGFloat.random(in: 0...size.width),
-                    y: -50
-                ),
+                position: CGPoint(x: CGFloat.random(in: 0...size.width), y: -50),
                 color: [
-                    ModernTheme.primary,
-                    ModernTheme.secondary,
-                    ModernTheme.tertiary,
-                    ModernTheme.success,
-                    ModernTheme.info
+                    ModernTheme.primary, ModernTheme.secondary, ModernTheme.tertiary,
+                    ModernTheme.success, ModernTheme.info
                 ].randomElement()!,
                 size: CGFloat.random(in: 8...16),
                 velocity: CGFloat.random(in: 100...300),
@@ -912,20 +806,11 @@ struct ConfettiView: View {
     }
 }
 
-struct ConfettiPiece: Identifiable {
-    let id = UUID()
-    let position: CGPoint
-    let color: Color
-    let size: CGFloat
-    let velocity: CGFloat
-    let angularVelocity: Double
-}
-
 struct ConfettiPieceView: View {
     let piece: ConfettiPiece
     @State private var position: CGPoint
-    @State private var rotation: Double = 0
-    @State private var opacity: Double = 1
+    @State private var rotation = 0.0
+    @State private var opacity  = 1.0
     
     init(piece: ConfettiPiece) {
         self.piece = piece
@@ -949,7 +834,7 @@ struct ConfettiPieceView: View {
     }
 }
 
-// MARK: - Close Button
+// MARK: - Close button
 struct CloseButton: View {
     let action: () -> Void
     
@@ -959,11 +844,7 @@ struct CloseButton: View {
                 Circle()
                     .fill(ModernTheme.glassWhite)
                     .frame(width: 32, height: 32)
-                    .background(
-                        .ultraThinMaterial,
-                        in: Circle()
-                    )
-                
+                    .background(.ultraThinMaterial, in: Circle())
                 Image(systemName: "xmark")
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(ModernTheme.textSecondary)
@@ -972,9 +853,9 @@ struct CloseButton: View {
     }
 }
 
-// MARK: - Footer View
+// MARK: - Footer
 struct PurchaseFooterView: View {
-    @EnvironmentObject var localizationManager: LocalizationManager
+    @EnvironmentObject private var localizationManager: LocalizationManager
     
     var body: some View {
         VStack(spacing: ModernTheme.Spacing.sm) {
@@ -982,9 +863,9 @@ struct PurchaseFooterView: View {
                 .font(.system(size: 24))
                 .foregroundColor(ModernTheme.textTertiary)
             
-            Text(localizationManager.currentLanguage == .turkish ?
-                 "Tüm ödemeler Apple tarafından güvenle işlenir" :
-                 "All payments are securely processed by Apple")
+            Text(localizationManager.currentLanguage == .turkish
+                 ? "Tüm ödemeler Apple tarafından güvenle işlenir"
+                 : "All payments are securely processed by Apple")
                 .font(ModernTheme.Typography.caption)
                 .foregroundColor(ModernTheme.textTertiary)
                 .multilineTextAlignment(.center)
